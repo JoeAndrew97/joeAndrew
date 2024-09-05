@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>GeoNames APIs</title>
+    <!-- <meta name="author" content="" />
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" /> -->
+
+    <link href="libs/css/style.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="header"></div>
+
+    <div class="main">
+      <table>
+        <tr>
+          <th>API name</th>
+          <th>API description</th>
+          <th></th>
+        </tr>
+        <tr>
+          <td>Earthquakes</td>
+          <td>
+            <p>
+              If available, returns info on the largest recent earthquake within
+              a given bounding box
+            </p>
+            <label for="lat-north">Latitude North:</label>
+            <input type="number" id="lat-north" placeholder="0 ≤ 90" />
+            <label for="lat-south">Latitude South:</label>
+            <input type="number" id="lat-south" placeholder="-90 ≤ 0" />
+            <label for="lng-east">Longitude East:</label>
+            <input type="number" id="lng-east" placeholder="-180 ≤ 0" />
+            <label for="lng-west">Longitude West:</label>
+            <input type="number" id="lng-west" placeholder="0 ≤ 180" />
+          </td>
+          <td><button id="fetchQuakeData">Fetch Earthquake Data</button></td>
+        </tr>
+        <tr>
+          <td>Postal Code Look Up</td>
+          <td>
+            <p>Returns the region of a given country/postcode combination</p>
+            <select id="postCodeCountry">
+              <option value="CH">Canada</option>
+              <option value="GB">Great Britain</option>
+              <option value="AT">Austria</option>
+            </select>
+            <input
+              type="text"
+              id="postcodeInput"
+              placeholder="Enter Postcode"
+            />
+          </td>
+          <td><button id="postcodeSubmit">Look Up Postcode</button></td>
+        </tr>
+        <tr>
+          <td>Country Look Up</td>
+          <td>
+            <p>Returns a country from latitude/longitude coordinates</p>
+            <label for="lat">Latitude:</label><br />
+            <input type="number" id="lat" placeholder="-90 ≤ 90" />
+            <label for="lng">Longitude:</label><br />
+            <input type="number" id="lng" placeholder="-180 ≤ 180" />
+          </td>
+          <td><button id="countrySubmit">Look up location</button></td>
+        </tr>
+        <tr>
+          <td id="results-cell" colspan="3">
+            <p>Results:</p>
+            <!-- Earthquake Results -->
+            <dl id="earthquake-data">
+              <dt>Date and Time:</dt>
+              <dd id="date"></dd>
+              <dt>Depth:</dt>
+              <dd id="depth"></dd>
+              <dt>Magnitude:</dt>
+              <dd id="magnitude"></dd>
+              <dt>Location:</dt>
+              <dd id="location"></dd>
+            </dl>
+            <!-- Postcode Lookup Results -->
+            <dl id="postcode-data">
+              <dt>Location:</dt>
+              <dd id="postcode-location"></dd>
+            </dl>
+            <!-- County Lookup Results -->
+            <dl id="country-data">
+              <dt>Location:</dt>
+              <dd id="country-location"></dd>
+            </dl>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div id="preloader">
+      <div class="spinner"></div>
+    </div>
+
+    <script></script>
+
+    <script src="libs/js/jquery-3.7.1.min.js"></script>
+    <script src="libs/js/script.js"></script>
+  </body>
+</html>
+
+<!--  when server has spun up find at: http://localhost/task/   -->
