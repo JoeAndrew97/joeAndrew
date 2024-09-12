@@ -35,3 +35,9 @@ body {
   width: 200px;
   margin: 0 auto;
 }
+
+/* Limit height of dropdown menu to 50% viewport height */
+.scrollable-dropdown .dropdown-menu {
+  max-height: 50vh;
+  overflow-y: auto;
+}
