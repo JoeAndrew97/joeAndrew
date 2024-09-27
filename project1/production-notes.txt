@@ -1,6 +1,0 @@
-- Spinner dissapearing before country data is populated 
-- Add Navbar
-- Attributions may be needed e.g. faveicon
-- max zoom needs to be set (either max zoom or map.fitBounds()? )
-- Use countryborders in the specification to return a border where the entry matches a given country code 
-- Info button not active unless a country is chosen (possibly if statement in country select)
