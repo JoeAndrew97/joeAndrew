@@ -1,0 +1,64 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#map {
+  width: 100%;
+  height: 95vh;
+  margin: 0;
+  padding-top: 54px;
+  min-height: 360px;
+}
+
+#selectContainer {
+  top: 0;
+
+  width: 100%;
+  padding: 11px 0;
+}
+
+#countrySelect {
+  width: 200px;
+  margin: 0 auto;
+}
+
+.navbar-brand {
+  position: absolute;
+}
+
+/* For Mobile */
+@media (max-width: 460px) {
+  .navbar-brand {
+    display: none;
+  }
+
+  #countrySelect {
+    width: 70%;
+    min-width: 136px;
+  }
+
+  #map {
+    min-width: 170px;
+  }
+}
+
+/* Spinner Container Styles */
+#loadingSpinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 9999;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
