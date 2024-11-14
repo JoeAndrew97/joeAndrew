@@ -13,6 +13,7 @@
     <section>
       <div class="appHeader">
         <div class="row">
+          <!-- Search Bar Container -->
           <div class="col">
             <input
               id="searchInp"
@@ -20,7 +21,7 @@
               placeholder="search"
             />
           </div>
-
+          <!-- Container for Refresh, Filter and Add Buttons -->
           <div class="col-6 text-end me-2">
             <div class="btn-group" role="group" aria-label="buttons">
               <button id="refreshBtn" type="button" class="btn btn-primary">
@@ -35,7 +36,7 @@
             </div>
           </div>
         </div>
-
+        <!-- Container for Personnel, Departments, Locations tabs - 'active' status toggled on/off -->
         <ul class="nav nav-tabs" id="myTab" role="tablist">
           <li class="nav-item" role="presentation">
             <button
@@ -85,7 +86,9 @@
         </ul>
       </div>
 
+      <!-- Tables Container -->
       <div class="tab-content bg-white">
+        <!-- Personnel Table -->
         <div
           class="tab-pane show active"
           id="personnel-tab-pane"
@@ -95,45 +98,11 @@
         >
           <table class="table table-hover">
             <tbody id="personnelTableBody">
-              <!-- Below is an example row. Create a JS function that interogates the database and 
-            dynamically creates the HTML for the table contents. -->
-
-              <tr>
-                <td class="align-middle text-nowrap">Ace, Tamarra</td>
-                <td class="align-middle text-nowrap d-none d-md-table-cell">
-                  Support
-                </td>
-                <td class="align-middle text-nowrap d-none d-md-table-cell">
-                  Munich
-                </td>
-                <td class="align-middle text-nowrap d-none d-md-table-cell">
-                  tacem@vinaora.com
-                </td>
-                <td class="text-end text-nowrap">
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editPersonnelModal"
-                    data-id="23"
-                  >
-                    <i class="fa-solid fa-pencil fa-fw"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#deletePersonnelModal"
-                    data-id="23"
-                  >
-                    <i class="fa-solid fa-trash fa-fw"></i>
-                  </button>
-                </td>
-              </tr>
+              <!-- Populated with JS by populatePersonnelTable() -->
             </tbody>
           </table>
         </div>
-
+        <!-- Departments Table -->
         <div
           class="tab-pane"
           id="departments-tab-pane"
@@ -173,7 +142,7 @@
             </tbody>
           </table>
         </div>
-
+        <!-- Locations Table -->
         <div
           class="tab-pane"
           id="locations-tab-pane"
@@ -201,11 +170,12 @@
           </table>
         </div>
       </div>
-
       <footer class="border-top text-center fw-bold">
         <p class="fw-light my-3">Company Directory version 1.0</p>
       </footer>
     </section>
+
+    <!-- Edit Personnel Modal -->
 
     <div
       id="editPersonnelModal"
@@ -312,7 +282,6 @@
       </div>
     </div>
 
-    <!-- Add any additional JavaScript files here -->
     <script src="./libs/js/jquery-3.6.0.min.js"></script>
     <script src="./libs/js/bootstrap.bundle.min.js"></script>
     <script src="./libs/js/all.min.js"></script>
