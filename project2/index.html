@@ -14,14 +14,15 @@
       <div class="appHeader">
         <div class="row">
           <!-- Search Bar Container -->
-          <div class="col">
+          <div class="col d-flex align-items-center">
             <input
               id="searchInp"
-              class="form-control mb-3"
-              placeholder="search"
+              class="form-control mb-3 me-2"
+              placeholder="Search"
             />
           </div>
           <!-- Container for Refresh, Filter and Add Buttons -->
+
           <div class="col-6 text-end me-2">
             <div class="btn-group" role="group" aria-label="buttons">
               <button id="refreshBtn" type="button" class="btn btn-primary">
@@ -36,7 +37,7 @@
             </div>
           </div>
         </div>
-        <!-- Container for Personnel, Departments, Locations tabs - 'active' status toggled on/off -->
+        <!-- Container for Personnel, Departments, Locations tabs - 'active' status toggled on/off by data-bs-toggle attribute -->
         <ul class="nav nav-tabs" id="myTab" role="tablist">
           <li class="nav-item" role="presentation">
             <button
@@ -115,7 +116,7 @@
               <!-- Below is an example row. Create a JS function that interogates the database and 
             dynamically creates the HTML for the table contents. -->
 
-              <tr>
+              <!-- <tr>
                 <td class="align-middle text-nowrap">Human resources</td>
                 <td class="align-middle text-nowrap d-none d-md-table-cell">
                   London
@@ -138,7 +139,7 @@
                     <i class="fa-solid fa-trash fa-fw"></i>
                   </button>
                 </td>
-              </tr>
+              </tr> -->
             </tbody>
           </table>
         </div>
@@ -170,6 +171,7 @@
           </table>
         </div>
       </div>
+      <!-- Footer -->
       <footer class="border-top text-center fw-bold">
         <p class="fw-light my-3">Company Directory version 1.0</p>
       </footer>
