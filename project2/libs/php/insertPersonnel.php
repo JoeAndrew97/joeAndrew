@@ -4,8 +4,6 @@
     ini_set('display_errors', 'On');
     error_reporting(E_ALL);
 
-    $executionStartTime = microtime(true);
-
     include("config.php");
 
     header('Content-Type: application/json; charset=UTF-8');
@@ -20,9 +18,17 @@
         exit;
     }
 
-    $query = $conn->prepare('INSERT INTO personnel (firstName, lastName, departmentID, email, locationID) VALUES (?, ?, ?, ?, ?)');
+    // Insert data into the personnel table
+    $query = $conn->prepare('INSERT INTO personnel (firstName, lastName, jobTitle, email, departmentID) VALUES (?, ?, ?, ?, ?)');
 
-    $query->bind_param('ssisi', $_POST['firstName'], $_POST['lastName'], $_POST['departmentID'], $_POST['email'], $_POST['locationID']);
+    $query->bind_param(
+        'ssssi', 
+        $_POST['firstName'], 
+        $_POST['lastName'], 
+        $_POST['jobTitle'], 
+        $_POST['email'], 
+        $_POST['departmentID']  // This should be passed from the client-side form
+    );
 
     if (!$query->execute()) {
         $output['status']['code'] = "400";
@@ -40,4 +46,5 @@
     $conn->close();
 
     echo json_encode($output);
+
 ?>

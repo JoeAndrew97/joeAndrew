@@ -677,7 +677,8 @@ function populateAddPersonnelDropdowns() {
   });
 }
 
-// When new personnel details have been added, sends data to PHP script to add personnel to DB --- currently returning fatal error!!!!!
+// When new personnel details have been added, sends data to insertPersonnel.php script to add personnel to DB --- currently returning fatal error!!!!!
+// Will need to support only one location per department
 $('#savePersonnelBtn').click(function () {
   const firstName = $('#addFirstName').val().trim();
   const lastName = $('#addLastName').val().trim();
@@ -686,7 +687,10 @@ $('#savePersonnelBtn').click(function () {
   const locationID = $('#addLocation').val();
 
   if (!firstName || !lastName || !departmentID || !email || !locationID) {
-    alert('Please fill out all fields.');
+    // You can reuse the message modal for errors if needed
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('Please fill out all fields.');
+    $('#messageModal').modal('show');
     return;
   }
 
@@ -704,20 +708,30 @@ $('#savePersonnelBtn').click(function () {
     dataType: 'json',
     success: function (response) {
       if (response.status.code === '200') {
-        // Close the modal
+        // Close the Add Personnel modal
         $('#addPersonnelModal').modal('hide');
 
         // Refresh the Personnel Table
         populatePersonnelTable();
 
-        // Show a success message (optional)
-        alert('Personnel added successfully!');
+        // Show the success message using the modal
+        $('#messageModal .modal-title').text('Success');
+        $('#messageContent').text('Personnel added successfully!');
+        $('#messageModal').modal('show');
       } else {
         console.error('Error adding personnel:', response.status.description);
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text('Failed to add personnel. Please try again.');
+        $('#messageModal').modal('show');
       }
     },
     error: function (xhr, status, error) {
       console.error('Error during add request:', status, error);
+      $('#messageModal .modal-title').text('Error');
+      $('#messageContent').text(
+        'An error occurred while adding personnel. Please try again.'
+      );
+      $('#messageModal').modal('show');
     },
   });
 });
