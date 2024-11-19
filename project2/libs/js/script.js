@@ -1,135 +1,171 @@
-// Called by fetchAllData()
-function populatePersonnelTable(data) {
+// AJAX request to getAll.php
+function populatePersonnelTable() {
   const $personnelTableBody = $('#personnelTableBody');
   $personnelTableBody.empty(); // Clear any existing rows
 
-  data.forEach((person) => {
-    const rowHtml = `
-      <tr>
-        <td class="align-middle text-nowrap">${person.lastName || 'N/A'}, ${
-      person.firstName || 'N/A'
-    }</td>
-        <td class="align-middle text-nowrap d-md-table-cell">${
-          person.department || 'N/A'
-        }</td>
-        <td class="align-middle text-nowrap d-md-table-cell">${
-          person.location || 'N/A'
-        }</td>
-        <td class="align-middle text-nowrap d-md-table-cell">${
-          person.email || 'N/A'
-        }</td>
-        <td class="text-end text-nowrap">
-            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonnelModal" data-id="${
-              person.id || ''
-            }">
-                <i class="fa-solid fa-pencil fa-fw"></i>
-            </button>
-            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
-              person.id || ''
-            }">
-                <i class="fa-solid fa-trash fa-fw"></i>
-            </button>
-        </td>
-      </tr>
-    `;
-    $personnelTableBody.append(rowHtml);
-  });
-}
-
-// Called by fetchAllData() -- !check that correct values are used as identifiers when edit department modal appears! -- existing HTML uses data.id - may need to refer to DB
-function populateDepartmentsTable(data) {
-  const $departmentsTableBody = $('#departmentTableBody');
-  $departmentsTableBody.empty();
-
-  // Create a Map to store unique departments and their locations
-  const departmentsMap = new Map();
-
-  // Iterate through the data to populate the map
-  data.forEach((person) => {
-    const department = person.department || 'Unknown';
-    const location = person.location || 'Unknown';
-
-    // Use the department as the key and location as the value
-    if (!departmentsMap.has(department)) {
-      departmentsMap.set(department, location);
-    }
-  });
-
-  // Iterate through the map to build table rows
-  departmentsMap.forEach((location, department) => {
-    const rowHtml = `
-      <tr>
-        <td class="align-middle text-nowrap">${department}</td>
-        <td class="align-middle text-nowrap d-none d-md-table-cell">${location}</td>
-        <td class="align-middle text-end text-nowrap">
-          <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editDepartmentModal" data-department="${department}">
-            <i class="fa-solid fa-pencil fa-fw"></i>
-          </button>
-          <button type="button" class="btn btn-primary btn-sm deleteDepartmentBtn" data-department="${department}">
-            <i class="fa-solid fa-trash fa-fw"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-    $departmentsTableBody.append(rowHtml);
-  });
-}
-
-// Called by fetchAllData()
-function populateLocationsTable(data) {
-  const $locationTableBody = $('#locationTableBody');
-  $locationTableBody.empty();
-
-  // Create a Set to store unique locations
-  const locationsSet = new Set();
-
-  // Iterate through the data to populate the Set
-  data.forEach((person) => {
-    const location = person.location || 'Unknown';
-    locationsSet.add(location); // Add unique locations to the Set
-  });
-
-  // Iterate through the Set to build table rows
-  locationsSet.forEach((location) => {
-    const rowHtml = `
-      <tr>
-        <td class="align-middle text-nowrap">${location}</td>
-        <td class="align-middle text-end text-nowrap">
-          <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editLocationModal" data-location="${location}">
-            <i class="fa-solid fa-pencil fa-fw"></i>
-          </button>
-          <button type="button" class="btn btn-primary btn-sm deleteLocationBtn" data-location="${location}">
-            <i class="fa-solid fa-trash fa-fw"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-    $locationTableBody.append(rowHtml);
-  });
-}
-
-// Fetch data from getAll.php and calls each populate table function
-function fetchAllData() {
-  fetch('http://localhost/project2/joeAndrew/project2/libs/php/getAll.php')
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.status.code === '200') {
-        populatePersonnelTable(result.data);
-        populateDepartmentsTable(result.data);
-        populateLocationsTable(result.data);
+  // Fetch the latest data from the server
+  $.ajax({
+    url: 'libs/php/getAll.php',
+    method: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Populate the table with the fetched data
+        response.data.forEach((person) => {
+          const rowHtml = `
+            <tr>
+              <td class="align-middle text-nowrap">${
+                person.lastName || 'N/A'
+              }, ${person.firstName || 'N/A'}</td>
+              <td class="align-middle text-nowrap d-md-table-cell">${
+                person.department || 'N/A'
+              }</td>
+              <td class="align-middle text-nowrap d-md-table-cell">${
+                person.location || 'N/A'
+              }</td>
+              <td class="align-middle text-nowrap d-md-table-cell">${
+                person.email || 'N/A'
+              }</td>
+              <td class="text-end text-nowrap">
+                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonnelModal" data-id="${
+                    person.id || ''
+                  }">
+                      <i class="fa-solid fa-pencil fa-fw"></i>
+                  </button>
+                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
+                    person.id || ''
+                  }">
+                      <i class="fa-solid fa-trash fa-fw"></i>
+                  </button>
+              </td>
+            </tr>
+          `;
+          $personnelTableBody.append(rowHtml);
+        });
       } else {
-        console.error('Error fetching data:', result.status.description);
+        console.error(
+          'Failed to fetch personnel data:',
+          response.status.description
+        );
       }
-    })
-    .catch((error) => console.error('Fetch error:', error));
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching personnel data:', status, error);
+    },
+  });
+}
+// AJAX request to getDepartmentsWithLocations.php
+function populateDepartmentsTable() {
+  const $departmentsTableBody = $('#departmentTableBody');
+  $departmentsTableBody.empty(); // Clear any existing rows
+
+  // Fetch the latest department and location data
+  $.ajax({
+    url: 'libs/php/getDepartmentsWithLocations.php', // Endpoint to fetch department and location data
+    method: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Populate the table with the fetched data
+        response.data.forEach((department) => {
+          const rowHtml = `
+            <tr>
+              <td class="align-middle text-nowrap">${
+                department.departmentName || 'Unknown'
+              }</td>
+              <td class="align-middle text-nowrap d-none d-md-table-cell">${
+                department.locationName || 'Unknown'
+              }</td>
+              <td class="align-middle text-end text-nowrap">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editDepartmentModal" data-id="${
+                  department.departmentID
+                }">
+                  <i class="fa-solid fa-pencil fa-fw"></i>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm deleteDepartmentBtn" data-id="${
+                  department.departmentID
+                }">
+                  <i class="fa-solid fa-trash fa-fw"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+          $departmentsTableBody.append(rowHtml);
+        });
+      } else {
+        console.error(
+          'Failed to fetch departments with locations:',
+          response.status.description
+        );
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error(
+        'Error fetching departments with locations:',
+        status,
+        error
+      );
+    },
+  });
 }
 
-// Calls fetchAllData to populate all tables on page load
-document.addEventListener('DOMContentLoaded', fetchAllData);
+// AJAX request to getAllLocations.php
+function populateLocationsTable() {
+  const $locationTableBody = $('#locationTableBody');
+  $locationTableBody.empty(); // Clear any existing rows
 
-// ------------------- Original code below --------------------
+  // Fetch the latest location data from the server
+  $.ajax({
+    url: 'libs/php/getAllLocations.php', // Endpoint to fetch location data
+    method: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Populate the table with the fetched data
+        response.data.forEach((location) => {
+          const rowHtml = `
+            <tr>
+              <td class="align-middle text-nowrap">${
+                location.name || 'Unknown'
+              }</td>
+              <td class="align-middle text-end text-nowrap">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editLocationModal" data-id="${
+                  location.id
+                }">
+                  <i class="fa-solid fa-pencil fa-fw"></i>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm deleteLocationBtn" data-id="${
+                  location.id
+                }">
+                  <i class="fa-solid fa-trash fa-fw"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+          $locationTableBody.append(rowHtml);
+        });
+      } else {
+        console.error(
+          'Failed to fetch locations:',
+          response.status.description
+        );
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching locations:', status, error);
+    },
+  });
+}
 
-// INCOMPLETE - will filter results as search bar inputs are entered
+// Call all populateTable() functions on page load
+document.addEventListener('DOMContentLoaded', function () {
+  populatePersonnelTable();
+  populateDepartmentsTable();
+  populateLocationsTable();
+});
+
+// Filters search bar results and toggles clear search button visibility
+// REFACTOR FOR MULTI-USER
 $('#searchInp').on('keyup', function () {
   const searchTerm = $(this).val().trim();
 
@@ -162,7 +198,8 @@ $('#searchInp').on('keyup', function () {
   });
 });
 
-// Clear search bar and hide the "Clear Search" text when clicked
+// Clears search bar and removes search term filters
+// REFACTOR FOR MULTI-USER?
 $('#clearSearch').on('click', function () {
   $('#searchInp').val('');
   $(this).hide();
