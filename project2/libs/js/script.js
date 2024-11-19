@@ -54,6 +54,7 @@ function populatePersonnelTable() {
     },
   });
 }
+
 // AJAX request to getDepartmentsWithLocations.php
 function populateDepartmentsTable() {
   const $departmentsTableBody = $('#departmentTableBody');
@@ -157,17 +158,37 @@ function populateLocationsTable() {
   });
 }
 
-// Call all populateTable() functions on page load
-document.addEventListener('DOMContentLoaded', function () {
+// Calls each of the above populate table functions
+function fetchAllData() {
   populatePersonnelTable();
   populateDepartmentsTable();
   populateLocationsTable();
-});
+}
+
+// Used if no results are available from user's search bar query
+function showNoResultsMessage(tableSelector, message) {
+  const $tableBody = $(tableSelector);
+
+  // Remove existing "no results" row if present
+  $tableBody.find('.no-results').remove();
+
+  // Count visible rows
+  const visibleRows = $tableBody.find('tr:visible').length;
+
+  // Append "No Results" message only if no visible rows exist
+  if (visibleRows === 0) {
+    $tableBody.append(
+      `<tr class="no-results"><td colspan="100%" class="text-center">${message}</td></tr>`
+    );
+  }
+}
+
+// Calls fetchAllData on page load
+document.addEventListener('DOMContentLoaded', fetchAllData);
 
 // Filters search bar results and toggles clear search button visibility
-// REFACTOR FOR MULTI-USER
 $('#searchInp').on('keyup', function () {
-  const searchTerm = $(this).val().trim();
+  const searchTerm = $(this).val().trim().toLowerCase();
 
   // Show or hide the "Clear Search" text based on input value
   if (searchTerm.length > 0) {
@@ -176,30 +197,52 @@ $('#searchInp').on('keyup', function () {
     $('#clearSearch').hide();
   }
 
-  // Normalize input for case-insensitive search
-  const normalizedTerm = searchTerm.toLowerCase();
-
   // Filter Personnel Table
   $('#personnelTableBody tr').each(function () {
     const rowText = $(this).text().toLowerCase();
-    $(this).toggle(rowText.includes(normalizedTerm));
+    $(this).toggle(rowText.includes(searchTerm));
   });
+  showNoResultsMessage('#personnelTableBody', 'No matching personnel found.');
 
   // Filter Departments Table
   $('#departmentTableBody tr').each(function () {
     const rowText = $(this).text().toLowerCase();
-    $(this).toggle(rowText.includes(normalizedTerm));
+    $(this).toggle(rowText.includes(searchTerm));
   });
+  showNoResultsMessage(
+    '#departmentTableBody',
+    'No matching departments found.'
+  );
 
   // Filter Locations Table
   $('#locationTableBody tr').each(function () {
     const rowText = $(this).text().toLowerCase();
-    $(this).toggle(rowText.includes(normalizedTerm));
+    $(this).toggle(rowText.includes(searchTerm));
   });
+  showNoResultsMessage('#locationTableBody', 'No matching locations found.');
+});
+
+// Hooks into tab events to remove any lingering 'No Results' messages
+$('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
+  // Remove any lingering "No Results" rows from all tables
+  $('.no-results').remove();
+
+  // Check for "No Results" in the active tab
+  const activeTab = $(this).data('bs-target'); // Get the active tab pane selector
+
+  if (activeTab === '#personnel-tab-pane') {
+    showNoResultsMessage('#personnelTableBody', 'No matching personnel found.');
+  } else if (activeTab === '#departments-tab-pane') {
+    showNoResultsMessage(
+      '#departmentTableBody',
+      'No matching departments found.'
+    );
+  } else if (activeTab === '#locations-tab-pane') {
+    showNoResultsMessage('#locationTableBody', 'No matching locations found.');
+  }
 });
 
 // Clears search bar and removes search term filters
-// REFACTOR FOR MULTI-USER?
 $('#clearSearch').on('click', function () {
   $('#searchInp').val('');
   $(this).hide();
@@ -208,6 +251,9 @@ $('#clearSearch').on('click', function () {
   $(
     '#personnelTableBody tr, #departmentTableBody tr, #locationTableBody tr'
   ).show();
+
+  // Optionally remove "no results" messages
+  $('.no-results').remove();
 });
 
 // INCOMPLETE - refreshes info for tables with 'active' class
