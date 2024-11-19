@@ -281,7 +281,7 @@ function showNoResultsMessage(tableSelector, message) {
 
 // Populate filter modal dropdown menu
 function populateFilterDropdowns() {
-  // Fetch data for departments and locations
+  // Populate Department Dropdown
   $.ajax({
     url: 'libs/php/getAllDepartments.php',
     method: 'GET',
@@ -289,13 +289,17 @@ function populateFilterDropdowns() {
     success: function (response) {
       if (response.status.code === '200') {
         const $departmentDropdown = $('#filterDepartment');
-        $departmentDropdown.empty();
-        $departmentDropdown.append('<option value="">All Departments</option>'); // Default option
-        response.data.forEach((department) => {
+        if ($departmentDropdown.length) {
+          $departmentDropdown.empty();
           $departmentDropdown.append(
-            `<option value="${department.name}">${department.name}</option>`
+            '<option value="">All Departments</option>'
           );
-        });
+          response.data.forEach((department) => {
+            $departmentDropdown.append(
+              `<option value="${department.name}">${department.name}</option>`
+            );
+          });
+        }
       }
     },
     error: function () {
@@ -303,6 +307,7 @@ function populateFilterDropdowns() {
     },
   });
 
+  // Populate Location Dropdown
   $.ajax({
     url: 'libs/php/getAllLocations.php',
     method: 'GET',
@@ -310,13 +315,15 @@ function populateFilterDropdowns() {
     success: function (response) {
       if (response.status.code === '200') {
         const $locationDropdown = $('#filterLocation');
-        $locationDropdown.empty();
-        $locationDropdown.append('<option value="">All Locations</option>'); // Default option
-        response.data.forEach((location) => {
-          $locationDropdown.append(
-            `<option value="${location.name}">${location.name}</option>`
-          );
-        });
+        if ($locationDropdown.length) {
+          $locationDropdown.empty();
+          $locationDropdown.append('<option value="">All Locations</option>');
+          response.data.forEach((location) => {
+            $locationDropdown.append(
+              `<option value="${location.name}">${location.name}</option>`
+            );
+          });
+        }
       }
     },
     error: function () {
@@ -327,6 +334,40 @@ function populateFilterDropdowns() {
 
 // Calls fetchAllData on page load
 document.addEventListener('DOMContentLoaded', fetchAllData);
+
+// Disables fitler button when locations tab is active
+function toggleFilterButtonState() {
+  if ($('#locationsBtn').hasClass('active')) {
+    $('#filterBtn').prop('disabled', true); // Disable the filter button
+  } else {
+    $('#filterBtn').prop('disabled', false); // Enable the filter button
+  }
+}
+
+// Initialize filter button state on page load
+$(document).ready(function () {
+  toggleFilterButtonState();
+});
+
+// Calls toggleFilterButtonState() when user changed tab
+$('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
+  toggleFilterButtonState();
+});
+
+// Changes the filter modal title
+function changeModalTitle(newTitle) {
+  $('#filterModal .modal-title').text(newTitle);
+}
+
+// calls changeModalTitle() when filter button is clicked, depending on which tab is active
+$('#filterBtn').click(function () {
+  if ($('#personnelBtn').hasClass('active')) {
+    changeModalTitle('Filter Personnel');
+  } else if ($('#departmentsBtn').hasClass('active')) {
+    changeModalTitle('Filter Departments');
+  }
+  $('#filterModal').modal('show');
+});
 
 // Filters search bar results and toggles clear search button visibility
 $('#searchInp').on('keyup', function () {
@@ -416,7 +457,7 @@ $('#refreshBtn').click(function () {
   // }
 });
 
-//
+// Calls eithr filterPersonnel.php or filterDepartment.php in order to apply filters
 $('#applyFilter').click(function () {
   const selectedDepartment = $('#filterDepartment').val();
   const selectedLocation = $('#filterLocation').val();
@@ -453,16 +494,16 @@ $('#applyFilter').click(function () {
                   person.email || 'N/A'
                 }</td>
                 <td class="text-end text-nowrap">
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonnelModal" data-id="${
-                      person.id || ''
-                    }">
-                        <i class="fa-solid fa-pencil fa-fw"></i>
-                    </button>
-                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
-                      person.id || ''
-                    }">
-                        <i class="fa-solid fa-trash fa-fw"></i>
-                    </button>
+                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonnelModal" data-id="${
+                    person.id || ''
+                  }">
+                    <i class="fa-solid fa-pencil fa-fw"></i>
+                  </button>
+                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
+                    person.id || ''
+                  }">
+                    <i class="fa-solid fa-trash fa-fw"></i>
+                  </button>
                 </td>
               </tr>
             `;
@@ -471,8 +512,6 @@ $('#applyFilter').click(function () {
 
           // Close the modal
           $('#filterModal').modal('hide');
-        } else {
-          console.error('Filter error:', response.status.description);
         }
       },
       error: function (xhr, status, error) {
@@ -514,8 +553,6 @@ $('#applyFilter').click(function () {
 
           // Close the modal
           $('#filterModal').modal('hide');
-        } else {
-          console.error('Filter error:', response.status.description);
         }
       },
       error: function (xhr, status, error) {
@@ -525,10 +562,46 @@ $('#applyFilter').click(function () {
   }
 });
 
-// INCOMPLETE - Opens modal for filter button and populates the filter dropdown options
+// Opens filter modal and populates dropsdowns
 $('#filterBtn').click(function () {
-  $('#filterModal').modal('show');
+  const $filterContent = $('#filterContent');
+
+  if ($('#personnelBtn').hasClass('active')) {
+    // Filter for Personnel Table
+    $filterContent.html(`
+      <div class="mb-3">
+        <label for="filterDepartment" class="form-label">Department</label>
+        <select id="filterDepartment" class="form-select">
+          <option value="">All Departments</option>
+          <!-- Options will be dynamically added here -->
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="filterLocation" class="form-label">Location</label>
+        <select id="filterLocation" class="form-select">
+          <option value="">All Locations</option>
+          <!-- Options will be dynamically added here -->
+        </select>
+      </div>
+    `);
+  } else if ($('#departmentsBtn').hasClass('active')) {
+    // Filter for Departments Table
+    $filterContent.html(`
+      <div class="mb-3">
+        <label for="filterLocation" class="form-label">Location</label>
+        <select id="filterLocation" class="form-select">
+          <option value="">All Locations</option>
+          <!-- Options will be dynamically added here -->
+        </select>
+      </div>
+    `);
+  }
+
+  // Populate dropdown options dynamically
   populateFilterDropdowns();
+
+  // Open the modal
+  $('#filterModal').modal('show');
 });
 
 // INCOMPLETE - Opens add modal for add button
