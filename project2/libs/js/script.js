@@ -1,3 +1,8 @@
+// For development purposes when users are updating/deleting/creating, will need setting to false for production
+var isAuth = true;
+
+// ----------------- Fetch Data and Populate Tables ----------------
+
 // AJAX request to getAll.php
 function populatePersonnelTable() {
   const $personnelTableBody = $('#personnelTableBody');
@@ -54,7 +59,6 @@ function populatePersonnelTable() {
     },
   });
 }
-
 // AJAX request to getDepartmentsWithLocations.php
 function populateDepartmentsTable() {
   const $departmentsTableBody = $('#departmentTableBody');
@@ -109,7 +113,6 @@ function populateDepartmentsTable() {
     },
   });
 }
-
 // AJAX request to getAllLocations.php
 function populateLocationsTable() {
   const $locationTableBody = $('#locationTableBody');
@@ -157,13 +160,16 @@ function populateLocationsTable() {
     },
   });
 }
-
 // Calls each of the above populate table functions
 function fetchAllData() {
   populatePersonnelTable();
   populateDepartmentsTable();
   populateLocationsTable();
 }
+// Calls fetchAllData on page load
+document.addEventListener('DOMContentLoaded', fetchAllData);
+
+// ----------------- Search Bar Functionality  ----------------
 
 // Populates tables based off search bar input
 function populateSearchResults(data) {
@@ -260,7 +266,6 @@ function populateSearchResults(data) {
     }
   });
 }
-
 // Used if no results are available from user's search bar query
 function showNoResultsMessage(tableSelector, message) {
   const $tableBody = $(tableSelector);
@@ -278,6 +283,95 @@ function showNoResultsMessage(tableSelector, message) {
     );
   }
 }
+// Filters search bar results and toggles clear search button visibility
+$('#searchInp').on('keyup', function () {
+  const searchTerm = $(this).val().trim().toLowerCase();
+
+  // Show or hide the "Clear Search" text based on input value
+  if (searchTerm.length > 0) {
+    $('#clearSearch').show();
+  } else {
+    $('#clearSearch').hide();
+  }
+
+  // Filter Personnel Table
+  $('#personnelTableBody tr').each(function () {
+    const rowText = $(this).text().toLowerCase();
+    $(this).toggle(rowText.includes(searchTerm));
+  });
+  showNoResultsMessage('#personnelTableBody', 'No matching personnel found.');
+
+  // Filter Departments Table
+  $('#departmentTableBody tr').each(function () {
+    const rowText = $(this).text().toLowerCase();
+    $(this).toggle(rowText.includes(searchTerm));
+  });
+  showNoResultsMessage(
+    '#departmentTableBody',
+    'No matching departments found.'
+  );
+
+  // Filter Locations Table
+  $('#locationTableBody tr').each(function () {
+    const rowText = $(this).text().toLowerCase();
+    $(this).toggle(rowText.includes(searchTerm));
+  });
+  showNoResultsMessage('#locationTableBody', 'No matching locations found.');
+});
+// Hooks into tab events to remove any lingering 'No Results' messages
+$('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
+  // Remove any lingering "No Results" rows from all tables
+  $('.no-results').remove();
+
+  // Check for "No Results" in the active tab
+  const activeTab = $(this).data('bs-target'); // Get the active tab pane selector
+
+  if (activeTab === '#personnel-tab-pane') {
+    showNoResultsMessage('#personnelTableBody', 'No matching personnel found.');
+  } else if (activeTab === '#departments-tab-pane') {
+    showNoResultsMessage(
+      '#departmentTableBody',
+      'No matching departments found.'
+    );
+  } else if (activeTab === '#locations-tab-pane') {
+    showNoResultsMessage('#locationTableBody', 'No matching locations found.');
+  }
+});
+// Clears search bar and removes search term filters
+$('#clearSearch').on('click', function () {
+  $('#searchInp').val('');
+  $(this).hide();
+
+  // Show all rows in all tables
+  $(
+    '#personnelTableBody tr, #departmentTableBody tr, #locationTableBody tr'
+  ).show();
+
+  // Optionally remove "no results" messages
+  $('.no-results').remove();
+});
+
+// ----------------- Refresh Button Functionality  ----------------
+
+// Refreshes info for all tables
+$('#refreshBtn').click(function () {
+  // clear search bar
+  $('#searchInp').val('');
+  $('#clearSearch').hide();
+  fetchAllData();
+  // refresh table with 'active' class -- original code -- keep
+  // if ($('#personnelBtn').hasClass('active')) {
+  //   populatePersonnelTable();
+  // } else {
+  //   if ($('#departmentsBtn').hasClass('active')) {
+  //     populateDepartmentsTable();
+  //   } else {
+  //     populateLocationsTable();
+  //   }
+  // }
+});
+
+// ----------------- Filter Button Functionality  ----------------
 
 // Populate filter modal dropdown menu
 function populateFilterDropdowns() {
@@ -331,10 +425,6 @@ function populateFilterDropdowns() {
     },
   });
 }
-
-// Calls fetchAllData on page load
-document.addEventListener('DOMContentLoaded', fetchAllData);
-
 // Disables fitler button when locations tab is active
 function toggleFilterButtonState() {
   if ($('#locationsBtn').hasClass('active')) {
@@ -343,22 +433,18 @@ function toggleFilterButtonState() {
     $('#filterBtn').prop('disabled', false); // Enable the filter button
   }
 }
-
 // Initialize filter button state on page load
 $(document).ready(function () {
   toggleFilterButtonState();
 });
-
 // Calls toggleFilterButtonState() when user changed tab
 $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
   toggleFilterButtonState();
 });
-
 // Changes the filter modal title
 function changeModalTitle(newTitle) {
   $('#filterModal .modal-title').text(newTitle);
 }
-
 // calls changeModalTitle() when filter button is clicked, depending on which tab is active
 $('#filterBtn').click(function () {
   if ($('#personnelBtn').hasClass('active')) {
@@ -367,94 +453,6 @@ $('#filterBtn').click(function () {
     changeModalTitle('Filter Departments');
   }
   $('#filterModal').modal('show');
-});
-
-// Filters search bar results and toggles clear search button visibility
-$('#searchInp').on('keyup', function () {
-  const searchTerm = $(this).val().trim().toLowerCase();
-
-  // Show or hide the "Clear Search" text based on input value
-  if (searchTerm.length > 0) {
-    $('#clearSearch').show();
-  } else {
-    $('#clearSearch').hide();
-  }
-
-  // Filter Personnel Table
-  $('#personnelTableBody tr').each(function () {
-    const rowText = $(this).text().toLowerCase();
-    $(this).toggle(rowText.includes(searchTerm));
-  });
-  showNoResultsMessage('#personnelTableBody', 'No matching personnel found.');
-
-  // Filter Departments Table
-  $('#departmentTableBody tr').each(function () {
-    const rowText = $(this).text().toLowerCase();
-    $(this).toggle(rowText.includes(searchTerm));
-  });
-  showNoResultsMessage(
-    '#departmentTableBody',
-    'No matching departments found.'
-  );
-
-  // Filter Locations Table
-  $('#locationTableBody tr').each(function () {
-    const rowText = $(this).text().toLowerCase();
-    $(this).toggle(rowText.includes(searchTerm));
-  });
-  showNoResultsMessage('#locationTableBody', 'No matching locations found.');
-});
-
-// Hooks into tab events to remove any lingering 'No Results' messages
-$('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
-  // Remove any lingering "No Results" rows from all tables
-  $('.no-results').remove();
-
-  // Check for "No Results" in the active tab
-  const activeTab = $(this).data('bs-target'); // Get the active tab pane selector
-
-  if (activeTab === '#personnel-tab-pane') {
-    showNoResultsMessage('#personnelTableBody', 'No matching personnel found.');
-  } else if (activeTab === '#departments-tab-pane') {
-    showNoResultsMessage(
-      '#departmentTableBody',
-      'No matching departments found.'
-    );
-  } else if (activeTab === '#locations-tab-pane') {
-    showNoResultsMessage('#locationTableBody', 'No matching locations found.');
-  }
-});
-
-// Clears search bar and removes search term filters
-$('#clearSearch').on('click', function () {
-  $('#searchInp').val('');
-  $(this).hide();
-
-  // Show all rows in all tables
-  $(
-    '#personnelTableBody tr, #departmentTableBody tr, #locationTableBody tr'
-  ).show();
-
-  // Optionally remove "no results" messages
-  $('.no-results').remove();
-});
-
-// Refreshes info for all tables
-$('#refreshBtn').click(function () {
-  // clear search bar
-  $('#searchInp').val('');
-  $('#clearSearch').hide();
-  fetchAllData();
-  // refresh table with 'active' class -- original code -- keep
-  // if ($('#personnelBtn').hasClass('active')) {
-  //   populatePersonnelTable();
-  // } else {
-  //   if ($('#departmentsBtn').hasClass('active')) {
-  //     populateDepartmentsTable();
-  //   } else {
-  //     populateLocationsTable();
-  //   }
-  // }
 });
 
 // Calls eithr filterPersonnel.php or filterDepartment.php in order to apply filters
@@ -604,10 +602,127 @@ $('#filterBtn').click(function () {
   $('#filterModal').modal('show');
 });
 
-// INCOMPLETE - Opens add modal for add button
+// ----------------- Add Button Functionality  ----------------
+
+// Opens add modal, depending on currently open tab
 $('#addBtn').click(function () {
-  // Replicate the logic of the refresh button click to open the add modal for the table that is currently on display
+  if ($('#personnelBtn').hasClass('active')) {
+    // Reset the form
+    $('#addPersonnelForm')[0].reset();
+
+    // Populate the dropdowns for Department and Location
+    populateAddPersonnelDropdowns();
+
+    // Open the modal
+    $('#addPersonnelModal').modal('show');
+  } else {
+    if ($('#departmentsBtn').hasClass('active')) {
+      console.log('Add Depts');
+      // Logic for adding a department can be added here
+      return;
+    } else {
+      console.log('Add location');
+      // Logic for adding a location can be added here
+      return;
+    }
+  }
 });
+
+// Function to populate the Department and Location dropdowns
+function populateAddPersonnelDropdowns() {
+  // Populate Department Dropdown
+  $.ajax({
+    url: 'libs/php/getAllDepartments.php',
+    method: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        const $departmentDropdown = $('#addDepartment');
+        $departmentDropdown.empty();
+        $departmentDropdown.append(
+          '<option value="">Select a department</option>'
+        );
+        response.data.forEach((department) => {
+          $departmentDropdown.append(
+            `<option value="${department.id}">${department.name}</option>`
+          );
+        });
+      }
+    },
+    error: function () {
+      console.error('Failed to load departments.');
+    },
+  });
+
+  // Populate Location Dropdown
+  $.ajax({
+    url: 'libs/php/getAllLocations.php',
+    method: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        const $locationDropdown = $('#addLocation');
+        $locationDropdown.empty();
+        $locationDropdown.append('<option value="">Select a location</option>');
+        response.data.forEach((location) => {
+          $locationDropdown.append(
+            `<option value="${location.id}">${location.name}</option>`
+          );
+        });
+      }
+    },
+    error: function () {
+      console.error('Failed to load locations.');
+    },
+  });
+}
+
+// When new personnel details have been added, sends data to PHP script to add personnel to DB --- currently returning fatal error!!!!!
+$('#savePersonnelBtn').click(function () {
+  const firstName = $('#addFirstName').val().trim();
+  const lastName = $('#addLastName').val().trim();
+  const departmentID = $('#addDepartment').val();
+  const email = $('#addEmail').val().trim();
+  const locationID = $('#addLocation').val();
+
+  if (!firstName || !lastName || !departmentID || !email || !locationID) {
+    alert('Please fill out all fields.');
+    return;
+  }
+
+  // Send AJAX request to add personnel
+  $.ajax({
+    url: 'libs/php/insertPersonnel.php',
+    method: 'POST',
+    data: {
+      firstName,
+      lastName,
+      departmentID,
+      email,
+      locationID,
+    },
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Close the modal
+        $('#addPersonnelModal').modal('hide');
+
+        // Refresh the Personnel Table
+        populatePersonnelTable();
+
+        // Show a success message (optional)
+        alert('Personnel added successfully!');
+      } else {
+        console.error('Error adding personnel:', response.status.description);
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error during add request:', status, error);
+    },
+  });
+});
+
+// ----------------- INCOMPLETE  ----------------
 
 // INCOMPLETE - Refreshes table when personnal tab button is clicked
 $('#personnelBtn').click(function () {
