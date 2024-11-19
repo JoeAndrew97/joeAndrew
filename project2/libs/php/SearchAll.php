@@ -1,5 +1,7 @@
 <?php
 
+	// CURRENT PLAN IS TO USE FOR FILTER FUNCTIONALITY - NOT THE SEARCH BAR AS THE ONKEY UP REQUEST WOULD SEND TOO MANY AJAX REQUESTS 
+
 	// example use from browser
 	// http://localhost/companydirectory/libs/php/searchAll.php?txt=<txt>
 

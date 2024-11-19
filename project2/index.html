@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Company Directory</title>
+    <link rel="icon" type="image/ico" href="favicon.ico" />
     <link rel="stylesheet" href="./libs/css/bootstrap.min.css" />
     <link rel="stylesheet" href="./libs/css/all.min.css" />
     <link rel="stylesheet" href="./libs/css/style.css" />
   </head>
+  <!----------    Body     ---------->
   <body>
     <section>
       <div class="appHeader">
         <div class="row">
-          <!-- Search Bar Container -->
+          <!--------  Search Bar Container -------->
           <div class="input-group mb-3 col d-flex align-items-center">
             <input
               id="searchInp"
@@ -32,14 +34,7 @@
             </button>
           </div>
 
-          <!-- <div class="col d-flex align-items-center">
-            <input
-              id="searchInp"
-              class="form-control mb-3 me-2"
-              placeholder="Search"
-            />
-          </div> -->
-          <!-- Container for Refresh, Filter and Add Buttons -->
+          <!------ Container for Refresh, Filter and Add Buttons ------>
 
           <div class="col-6 text-end me-2">
             <div class="btn-group" role="group" aria-label="buttons">
@@ -55,7 +50,9 @@
             </div>
           </div>
         </div>
-        <!-- Container for Personnel, Departments, Locations tabs - 'active' status toggled on/off by data-bs-toggle attribute -->
+
+        <!------ Container for Personnel, Departments, Locations tabs - 'active' status toggled on/off by data-bs-toggle attribute ------>
+
         <ul class="nav nav-tabs" id="myTab" role="tablist">
           <li class="nav-item" role="presentation">
             <button
@@ -105,7 +102,8 @@
         </ul>
       </div>
 
-      <!-- Tables Container -->
+      <!-----------     Tables Container     ----------->
+
       <div class="tab-content bg-white">
         <!-- Personnel Table -->
         <div
@@ -117,10 +115,11 @@
         >
           <table class="table table-hover">
             <tbody id="personnelTableBody">
-              <!-- Populated with JS by populatePersonnelTable() -->
+              <!-- Populated by populatePersonnelTable() calling getAll.php -->
             </tbody>
           </table>
         </div>
+
         <!-- Departments Table -->
         <div
           class="tab-pane"
@@ -131,10 +130,11 @@
         >
           <table class="table table-hover">
             <tbody id="departmentTableBody">
-              <!-- Populated by getAllDepartments.php -->
+              <!-- Populated by populateDepartmentsTable() calling getDepartmentsWithLocations.php -->
             </tbody>
           </table>
         </div>
+
         <!-- Locations Table -->
         <div
           class="tab-pane"
@@ -145,29 +145,69 @@
         >
           <table class="table table-hover">
             <tbody id="locationTableBody">
-              <!-- Below is an example row. Create a JS function that interogates the database and 
-            dynamically creates the HTML for the table contents. -->
-
-              <tr>
-                <td class="align-middle text-nowrap">London</td>
-                <td class="align-middle text-end text-nowrap">
-                  <button type="button" class="btn btn-primary btn-sm">
-                    <i class="fa-solid fa-pencil fa-fw"></i>
-                  </button>
-                  <button type="button" class="btn btn-primary btn-sm">
-                    <i class="fa-solid fa-trash fa-fw"></i>
-                  </button>
-                </td>
-              </tr>
+              <!-- Populated by populateLocationsTable() calling getAllLocations.php -->
             </tbody>
           </table>
         </div>
       </div>
-      <!-- Footer -->
+
+      <!----------     Footer      ---------->
       <footer class="border-top text-center fw-bold">
         <p class="fw-light my-3">Company Directory version 1.0</p>
       </footer>
     </section>
+
+    <!----------     Modals      ---------->
+
+    <!-- Filter Search Modal -->
+
+    <div id="filterModal" class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Filter Personnel</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="filterForm">
+              <div class="mb-3">
+                <label for="filterDepartment" class="form-label"
+                  >Department</label
+                >
+                <select id="filterDepartment" class="form-select">
+                  <option value="">All Departments</option>
+                  <!-- Options will be dynamically added here -->
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="filterLocation" class="form-label">Location</label>
+                <select id="filterLocation" class="form-select">
+                  <option value="">All Locations</option>
+                  <!-- Options will be dynamically added here -->
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="applyFilter">
+              Apply Filter
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Edit Personnel Modal -->
 
