@@ -62,7 +62,6 @@ function populatePersonnelTable() {
     },
   });
 }
-
 // AJAX request to getDepartmentsWithLocations.php
 function populateDepartmentsTable() {
   const $departmentsTableBody = $('#departmentTableBody');
@@ -447,7 +446,6 @@ $('#filterBtn').click(function () {
   // Populate the dropdown options dynamically
   populateFilterDropdowns();
 });
-
 function populateFilterDropdowns() {
   let ajaxCallsRemaining = 2; // Track only two dropdowns for departments and locations
 
@@ -523,7 +521,6 @@ function populateFilterDropdowns() {
     },
   });
 }
-
 // function populateFilterDropdowns() {
 //   let ajaxCallsRemaining = 3; // Track the number of pending AJAX calls
 
@@ -685,22 +682,18 @@ function toggleFilterButtonState() {
     $('#filterBtn').prop('disabled', false); // Enable the filter button
   }
 }
-
 // Initialize filter button state on page load
 $(document).ready(function () {
   toggleFilterButtonState();
 });
-
 // Calls toggleFilterButtonState() when user changes tab
 $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
   toggleFilterButtonState();
 });
-
 // Changes the filter modal title
 function changeModalTitle(newTitle) {
   $('#filterModal .modal-title').text(newTitle);
 }
-
 $('#applyFilter').click(function () {
   const selectedDepartmentID = $('#filterDepartment').val(); // Get departmentID
   const selectedLocationID = $('#filterLocation').val(); // Get locationID
@@ -823,7 +816,7 @@ $('#applyFilter').click(function () {
   }
 });
 
-// ----------------- Add Personnel Button Functionality  ----------------
+// ----------------- Add Button Functionality  ----------------
 
 // Used for formatting names before submission to DB
 function capitaliseFirstLetter(string) {
@@ -833,32 +826,23 @@ function capitaliseFirstLetter(string) {
 $('#addBtn').click(function () {
   if (!isAuth) {
     $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('You are not authorized to add new personnel.');
-    $('#messageModal').modal('show'); // Trigger the message modal
+    $('#messageContent').text('You are not authorized to add new items.');
+    $('#messageModal').modal('show');
     return;
   }
 
   if ($('#personnelBtn').hasClass('active')) {
-    // Reset the form
+    // Reset and show Add Personnel Modal
     $('#addPersonnelForm')[0].reset();
-
-    // Disable the Save button until dropdowns are populated
-    $('#savePersonnelBtn').prop('disabled', true);
-
-    // Populate the dropdowns for Department and Location
-    populateAddPersonnelDropdowns(() => {
-      // Enable the Save button and show the modal only after dropdowns are populated
-      $('#savePersonnelBtn').prop('disabled', false);
-      $('#addPersonnelModal').modal('show');
-    });
+    populateAddPersonnelDropdowns();
+    $('#addPersonnelModal').modal('show');
+  } else if ($('#departmentsBtn').hasClass('active')) {
+    // Reset and show Add Department Modal
+    $('#addDepartmentForm')[0].reset();
+    populateAddDepartmentDropdowns();
+    $('#addDepartmentModal').modal('show');
   } else {
-    if ($('#departmentsBtn').hasClass('active')) {
-      console.log('Add Depts');
-      return;
-    } else {
-      console.log('Add location');
-      return;
-    }
+    console.log('Add functionality not implemented for this tab.');
   }
 });
 
@@ -934,8 +918,31 @@ function populateAddPersonnelDropdowns(callback) {
   });
 }
 
-// When new personnel details have been added, sends data to insertPersonnel.php script to add personnel to DB --- currently returning fatal error!!!!!
-// Will need to support only one location per department
+function populateAddDepartmentDropdowns() {
+  // Populate Location Dropdown
+  $.ajax({
+    url: 'libs/php/getAllLocations.php',
+    method: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        const $locationDropdown = $('#addDepartmentLocation');
+        $locationDropdown.empty();
+        $locationDropdown.append('<option value="">Select a location</option>');
+        response.data.forEach((location) => {
+          $locationDropdown.append(
+            `<option value="${location.id}">${location.name}</option>`
+          );
+        });
+      }
+    },
+    error: function () {
+      console.error('Failed to load locations.');
+    },
+  });
+}
+
+// When new personnel details have been added, sends data to insertPersonnel.php script to add personnel to DB
 $('#savePersonnelBtn').click(function () {
   // Get and trim the inputs
   let firstName = $('#addFirstName').val().trim();
@@ -1036,9 +1043,194 @@ $('#savePersonnelBtn').click(function () {
   });
 });
 
+$('#saveDepartmentBtn').click(function () {
+  const departmentName = $('#addDepartmentName').val().trim();
+  const locationID = $('#addDepartmentLocation').val();
+
+  // Close the modal immediately
+  $('#addDepartmentModal').modal('hide');
+
+  // Check if the user is authorized
+  if (!isAuth) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('You are not authorized to add new departments.');
+    $('#messageModal').modal('show');
+    return;
+  }
+
+  // Check if all fields are filled
+  if (!departmentName || !locationID) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('Please fill out all required fields.');
+    $('#messageModal').modal('show');
+    return;
+  }
+
+  // Capitalize department name
+  const formattedDepartmentName = capitaliseFirstLetter(departmentName);
+
+  // Validate department name and location association before proceeding
+  $.ajax({
+    url: 'libs/php/validateDepartmentLocation.php',
+    method: 'POST',
+    data: {
+      name: formattedDepartmentName, // Check against department name
+      locationID: locationID, // Use locationID
+    },
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '400') {
+        // Show validation error if the department-location association is invalid
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(response.status.description);
+        $('#messageModal').modal('show');
+        return;
+      }
+
+      // If validation passes, proceed to insert the new department
+      $.ajax({
+        url: 'libs/php/insertDepartment.php',
+        method: 'POST',
+        data: {
+          name: formattedDepartmentName, // 'name' matches the PHP script
+          locationID: locationID, // 'locationID' matches the PHP script
+        },
+        dataType: 'json',
+        success: function (response) {
+          if (response.status.code === '200') {
+            // Refresh the Departments Table
+            populateDepartmentsTable();
+
+            // Show success message
+            $('#messageModal .modal-title').text('Success');
+            $('#messageContent').text('Department added successfully!');
+            $('#messageModal').modal('show');
+          } else {
+            $('#messageModal .modal-title').text('Error');
+            $('#messageContent').text(
+              'Failed to add department. Please try again.'
+            );
+            $('#messageModal').modal('show');
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error('Error during add request:', status, error);
+          $('#messageModal .modal-title').text('Error');
+          $('#messageContent').text(
+            'An error occurred while adding the department. Please try again.'
+          );
+          $('#messageModal').modal('show');
+        },
+      });
+    },
+    error: function (xhr, status, error) {
+      console.error('Error validating department and location:', status, error);
+      $('#messageModal .modal-title').text('Error');
+      $('#messageContent').text(
+        'Failed to validate department and location. Please try again.'
+      );
+      $('#messageModal').modal('show');
+    },
+  });
+});
+
+// $('#saveDepartmentBtn').click(function () {
+//   const departmentName = $('#addDepartmentName').val().trim();
+//   const locationID = $('#addDepartmentLocation').val();
+
+//   // Close the modal immediately
+//   $('#addDepartmentModal').modal('hide');
+
+//   // Check if the user is authorized
+//   if (!isAuth) {
+//     $('#messageModal .modal-title').text('Error');
+//     $('#messageContent').text('You are not authorized to add new departments.');
+//     $('#messageModal').modal('show');
+//     return;
+//   }
+
+//   // Check if all fields are filled
+//   if (!departmentName || !locationID) {
+//     $('#messageModal .modal-title').text('Error');
+//     $('#messageContent').text('Please fill out all required fields.');
+//     $('#messageModal').modal('show');
+//     return;
+//   }
+
+//   // Capitalize department name
+//   const formattedDepartmentName = capitaliseFirstLetter(departmentName);
+
+//   // Validate department-location association before proceeding
+//   $.ajax({
+//     url: 'libs/php/validateDepartmentLocation.php',
+//     method: 'POST',
+//     data: {
+//       departmentID: null, // New department, so departmentID is not needed
+//       locationID: locationID,
+//     },
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === '400') {
+//         // Show validation error if the department-location association is invalid
+//         $('#messageModal .modal-title').text('Error');
+//         $('#messageContent').text(response.status.description);
+//         $('#messageModal').modal('show');
+//         return;
+//       }
+
+//       // If validation passes, proceed to insert the new department
+//       $.ajax({
+//         url: 'libs/php/insertDepartment.php',
+//         method: 'POST',
+//         data: {
+//           name: formattedDepartmentName, // 'name' matches the PHP script
+//           locationID: locationID, // 'locationID' matches the PHP script
+//         },
+//         dataType: 'json',
+//         success: function (response) {
+//           if (response.status.code === '200') {
+//             // Refresh the Departments Table
+//             populateDepartmentsTable();
+
+//             // Show success message
+//             $('#messageModal .modal-title').text('Success');
+//             $('#messageContent').text('Department added successfully!');
+//             $('#messageModal').modal('show');
+//           } else {
+//             $('#messageModal .modal-title').text('Error');
+//             $('#messageContent').text(
+//               'Failed to add department. Please try again.'
+//             );
+//             $('#messageModal').modal('show');
+//           }
+//         },
+//         error: function (xhr, status, error) {
+//           console.error('Error during add request:', status, error);
+//           $('#messageModal .modal-title').text('Error');
+//           $('#messageContent').text(
+//             'An error occurred while adding the department. Please try again.'
+//           );
+//           $('#messageModal').modal('show');
+//         },
+//       });
+//     },
+//     error: function (xhr, status, error) {
+//       console.error('Error validating department and location:', status, error);
+//       $('#messageModal .modal-title').text('Error');
+//       $('#messageContent').text(
+//         'Failed to validate department and location. Please try again.'
+//       );
+//       $('#messageModal').modal('show');
+//     },
+//   });
+// });
+
+// ----------------- Add Department Button Functionality  ----------------
+
 // ----------------- INCOMPLETE  ----------------
 
 // INCOMPLETE - Refreshes table when personnal tab button is clicked
+
 $('#personnelBtn').click(function () {
   // Call function to refresh personnel table
 });
@@ -1119,3 +1311,5 @@ $('#editPersonnelForm').on('submit', function (e) {
 
 // Even if search was not event driven, conflicts could occur - need handling for if user clicks on result that is no longer there
 // test multiple user functionality with multiple browser sesstions
+
+// ADD PRELOADER

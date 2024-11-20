@@ -20,36 +20,33 @@
         exit;
     }
 
-    // Validate inputs to prevent SQL injection
-    $departmentID = $_POST['departmentID'];
+    // Validate inputs
+    $name = $_POST['name'];
     $locationID = $_POST['locationID'];
 
-    if (!is_numeric($departmentID) || !is_numeric($locationID)) {
+    if (empty($name) || !is_numeric($locationID)) {
         echo json_encode([
             'status' => [
                 'code' => '400',
                 'name' => 'error',
-                'description' => 'Invalid input format',
+                'description' => 'Invalid or missing inputs.',
             ],
         ]);
         exit;
     }
 
-    // Use prepared statement to validate department and location
-    $query = $conn->prepare(
-        'SELECT * FROM department WHERE id = ? AND locationID = ?'
-    );
-
-    $query->bind_param('ii', $departmentID, $locationID);
+    // Check if a department with the same name already exists
+    $query = $conn->prepare('SELECT * FROM department WHERE name = ?');
+    $query->bind_param('s', $name);
     $query->execute();
     $result = $query->get_result();
 
-    if ($result->num_rows === 0) {
+    if ($result->num_rows > 0) {
         echo json_encode([
             'status' => [
                 'code' => '400',
                 'name' => 'error',
-                'description' => 'The selected department is not associated with the specified location.',
+                'description' => 'A department with this name already exists.',
             ],
         ]);
         exit;
@@ -59,11 +56,12 @@
         'status' => [
             'code' => '200',
             'name' => 'success',
-            'description' => 'Validation successful',
+            'description' => 'Validation successful.',
         ],
     ]);
 
     $query->close();
     $conn->close();
 ?>
+
 
