@@ -318,7 +318,7 @@
     </div>
 
     <!-- Add Department Modal -->
-     
+
     <div
     id="addDepartmentModal"
     class="modal fade"
@@ -372,6 +372,55 @@
       </div>
     </div>
     </div>
+
+    <!-- Add Location Modal -->
+  <div
+  id="addLocationModal"
+  class="modal fade"
+  tabindex="-1"
+  aria-hidden="true"
+  >
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Location</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="addLocationForm">
+          <div class="mb-3">
+            <label for="addLocationName" class="form-label">Location Name</label>
+            <input
+              type="text"
+              id="addLocationName"
+              class="form-control"
+              placeholder="Enter location name"
+              required
+            />
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cancel
+        </button>
+        <button type="button" id="saveLocationBtn" class="btn btn-primary">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+  </div>
+
 
 
     <!-- Edit Personnel Modal -->

@@ -846,6 +846,156 @@ $('#addBtn').click(function () {
   }
 });
 
+$('#addBtn').click(function () {
+  if (!isAuth) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('You are not authorized to add new locations.');
+    $('#messageModal').modal('show');
+    return;
+  }
+
+  if ($('#locationsBtn').hasClass('active')) {
+    // Reset the form
+    $('#addLocationForm')[0].reset();
+
+    // Open the Add Location modal
+    $('#addLocationModal').modal('show');
+  } else if ($('#departmentsBtn').hasClass('active')) {
+    // Handle adding a department if necessary
+    console.log('Open Add Department Modal');
+  } else if ($('#personnelBtn').hasClass('active')) {
+    // Handle adding personnel if necessary
+    console.log('Open Add Personnel Modal');
+  }
+});
+
+// Save New Location
+$('#saveLocationBtn').click(function () {
+  const locationName = $('#addLocationName').val().trim();
+
+  // Close the modal immediately
+  $('#addLocationModal').modal('hide');
+
+  // Check if the user is authorized
+  if (!isAuth) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('You are not authorized to add new locations.');
+    $('#messageModal').modal('show');
+    return;
+  }
+
+  // Check if the location name is filled
+  if (!locationName) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('Please enter a location name.');
+    $('#messageModal').modal('show');
+    return;
+  }
+
+  // Capitalize the first letter of each word
+  const formattedLocationName = locationName
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+
+  // Validate the formatted location name
+  $.ajax({
+    url: 'libs/php/insertLocation.php',
+    method: 'POST',
+    data: {
+      name: formattedLocationName,
+    },
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Refresh the Locations Table
+        populateLocationsTable();
+
+        // Show success message
+        $('#messageModal .modal-title').text('Success');
+        $('#messageContent').text('Location added successfully!');
+        $('#messageModal').modal('show');
+      } else if (response.status.code === '400') {
+        // Show error message if the location already exists
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(response.status.description);
+        $('#messageModal').modal('show');
+      } else {
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text('Failed to add location. Please try again.');
+        $('#messageModal').modal('show');
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error during add request:', status, error);
+      $('#messageModal .modal-title').text('Error');
+      $('#messageContent').text(
+        'An error occurred while adding the location. Please try again.'
+      );
+      $('#messageModal').modal('show');
+    },
+  });
+});
+
+// $('#saveLocationBtn').click(function () {
+//   const locationName = $('#addLocationName').val().trim();
+
+//   // Close the modal immediately
+//   $('#addLocationModal').modal('hide');
+
+//   // Check if the user is authorized
+//   if (!isAuth) {
+//     $('#messageModal .modal-title').text('Error');
+//     $('#messageContent').text('You are not authorized to add new locations.');
+//     $('#messageModal').modal('show');
+//     return;
+//   }
+
+//   // Check if the location name is filled
+//   if (!locationName) {
+//     $('#messageModal .modal-title').text('Error');
+//     $('#messageContent').text('Please enter a location name.');
+//     $('#messageModal').modal('show');
+//     return;
+//   }
+
+//   // Capitalize the location name
+//   const formattedLocationName = capitaliseFirstLetter(locationName);
+
+//   // Send AJAX request to add the new location
+//   $.ajax({
+//     url: 'libs/php/insertLocation.php',
+//     method: 'POST',
+//     data: {
+//       name: formattedLocationName, // Pass the location name to the PHP script
+//     },
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === '200') {
+//         // Refresh the Locations Table
+//         populateLocationsTable();
+
+//         // Show success message
+//         $('#messageModal .modal-title').text('Success');
+//         $('#messageContent').text('Location added successfully!');
+//         $('#messageModal').modal('show');
+//       } else {
+//         $('#messageModal .modal-title').text('Error');
+//         $('#messageContent').text('Failed to add location. Please try again.');
+//         $('#messageModal').modal('show');
+//       }
+//     },
+//     error: function (xhr, status, error) {
+//       console.error('Error during add request:', status, error);
+//       $('#messageModal .modal-title').text('Error');
+//       $('#messageContent').text(
+//         'An error occurred while adding the location. Please try again.'
+//       );
+//       $('#messageModal').modal('show');
+//     },
+//   });
+// });
+
 // Function to populate the Department and Location dropdowns
 function populateAddPersonnelDropdowns(callback) {
   let ajaxCallsRemaining = 2; // Track both dropdowns
@@ -1133,8 +1283,6 @@ $('#saveDepartmentBtn').click(function () {
     },
   });
 });
-
-// $('#saveDepartmentBtn').click(function () {
 //   const departmentName = $('#addDepartmentName').val().trim();
 //   const locationID = $('#addDepartmentLocation').val();
 
@@ -1234,6 +1382,8 @@ $('#saveDepartmentBtn').click(function () {
 $('#personnelBtn').click(function () {
   // Call function to refresh personnel table
 });
+
+// ------------------------------------------------------------------
 
 // INCOMPLETE - Refreshes table when departmets tab button is clicked
 $('#departmentsBtn').click(function () {
