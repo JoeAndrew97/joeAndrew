@@ -842,11 +842,15 @@ $('#addBtn').click(function () {
     // Reset the form
     $('#addPersonnelForm')[0].reset();
 
-    // Populate the dropdowns for Department and Location
-    populateAddPersonnelDropdowns();
+    // Disable the Save button until dropdowns are populated
+    $('#savePersonnelBtn').prop('disabled', true);
 
-    // Open the modal
-    $('#addPersonnelModal').modal('show');
+    // Populate the dropdowns for Department and Location
+    populateAddPersonnelDropdowns(() => {
+      // Enable the Save button and show the modal only after dropdowns are populated
+      $('#savePersonnelBtn').prop('disabled', false);
+      $('#addPersonnelModal').modal('show');
+    });
   } else {
     if ($('#departmentsBtn').hasClass('active')) {
       console.log('Add Depts');
@@ -857,8 +861,17 @@ $('#addBtn').click(function () {
     }
   }
 });
+
 // Function to populate the Department and Location dropdowns
-function populateAddPersonnelDropdowns() {
+function populateAddPersonnelDropdowns(callback) {
+  let ajaxCallsRemaining = 2; // Track both dropdowns
+
+  function onDropdownsPopulated() {
+    if (ajaxCallsRemaining === 0 && typeof callback === 'function') {
+      callback(); // Execute the callback after both dropdowns are populated
+    }
+  }
+
   // Populate Department Dropdown
   $.ajax({
     url: 'libs/php/getAllDepartments.php',
@@ -876,10 +889,19 @@ function populateAddPersonnelDropdowns() {
             `<option value="${department.id}">${department.name}</option>`
           );
         });
+      } else {
+        console.error(
+          'Failed to load departments:',
+          response.status.description
+        );
       }
     },
     error: function () {
       console.error('Failed to load departments.');
+    },
+    complete: function () {
+      ajaxCallsRemaining--;
+      onDropdownsPopulated();
     },
   });
 
@@ -898,10 +920,16 @@ function populateAddPersonnelDropdowns() {
             `<option value="${location.id}">${location.name}</option>`
           );
         });
+      } else {
+        console.error('Failed to load locations:', response.status.description);
       }
     },
     error: function () {
       console.error('Failed to load locations.');
+    },
+    complete: function () {
+      ajaxCallsRemaining--;
+      onDropdownsPopulated();
     },
   });
 }
@@ -915,6 +943,7 @@ $('#savePersonnelBtn').click(function () {
   const departmentID = $('#addDepartment').val();
   const email = $('#addEmail').val().trim();
   const locationID = $('#addLocation').val();
+  const jobTitle = $('#addJobTitle').val().trim(); // New field
 
   // Close the modal immediately
   $('#addPersonnelModal').modal('hide');
@@ -927,15 +956,15 @@ $('#savePersonnelBtn').click(function () {
     return;
   }
 
-  // Check if all fields are filled
+  // Check if all required fields are filled
   if (!firstName || !lastName || !departmentID || !email || !locationID) {
     $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('Please fill out all fields.');
+    $('#messageContent').text('Please fill out all required fields.');
     $('#messageModal').modal('show');
     return;
   }
 
-  // Capitalise first name and last name
+  // Capitalize first name and last name
   firstName = capitaliseFirstLetter(firstName);
   lastName = capitaliseFirstLetter(lastName);
 
@@ -965,6 +994,8 @@ $('#savePersonnelBtn').click(function () {
           lastName,
           departmentID,
           email,
+          locationID,
+          jobTitle, // Include jobTitle in the request
         },
         dataType: 'json',
         success: function (response) {

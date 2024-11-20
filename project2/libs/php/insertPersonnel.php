@@ -39,22 +39,26 @@
     }
 
     // Use prepared statement to insert personnel data
-    $query = $conn->prepare(
-        'INSERT INTO personnel (firstName, lastName, jobTitle, email, departmentID) VALUES (?, ?, ?, ?, ?)'
-    );
+// Insert data into the personnel table
+$query = $conn->prepare('INSERT INTO personnel (firstName, lastName, jobTitle, email, departmentID) VALUES (?, ?, ?, ?, ?)');
 
-    $query->bind_param('ssssi', $firstName, $lastName, $jobTitle, $email, $departmentID);
+$query->bind_param(
+    'ssssi',
+    $_POST['firstName'],
+    $_POST['lastName'],
+    $_POST['jobTitle'], // Include jobTitle
+    $_POST['email'],
+    $_POST['departmentID']
+);
 
-    if (!$query->execute()) {
-        echo json_encode([
-            'status' => [
-                'code' => '400',
-                'name' => 'executed',
-                'description' => 'Query execution failed',
-            ],
-        ]);
-        exit;
-    }
+if (!$query->execute()) {
+    $output['status']['code'] = "400";
+    $output['status']['name'] = "executed";
+    $output['status']['description'] = "query failed";
+    echo json_encode($output);
+    exit;
+}
+
 
     echo json_encode([
         'status' => [
