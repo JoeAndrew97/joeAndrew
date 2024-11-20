@@ -1,4 +1,4 @@
-// For development purposes when users are updating/deleting/creating, will need setting to false for production
+// For development purposes when users are updating/deleting/creating, will need initially setting to false for production
 var isAuth = true;
 
 // ----------------- Fetch Data and Populate Tables ----------------
@@ -22,6 +22,9 @@ function populatePersonnelTable() {
               <td class="align-middle text-nowrap">${
                 person.lastName || 'N/A'
               }, ${person.firstName || 'N/A'}</td>
+              <td class="align-middle text-nowrap d-md-table-cell">${
+                person.jobTitle || '' // Include jobTitle here
+              }</td>
               <td class="align-middle text-nowrap d-md-table-cell">${
                 person.department || 'N/A'
               }</td>
@@ -59,6 +62,7 @@ function populatePersonnelTable() {
     },
   });
 }
+
 // AJAX request to getDepartmentsWithLocations.php
 function populateDepartmentsTable() {
   const $departmentsTableBody = $('#departmentTableBody');
@@ -191,6 +195,9 @@ function populateSearchResults(data) {
           }</td>
           <td class="align-middle text-nowrap d-md-table-cell">${
             item.locationName || 'N/A'
+          }</td>
+          <td class="align-middle text-nowrap d-md-table-cell">${
+            item.jobTitle || 'N/A' // Add jobTitle here, fallback to 'N/A'
           }</td>
           <td class="align-middle text-nowrap d-md-table-cell">${
             item.email || 'N/A'
@@ -373,8 +380,84 @@ $('#refreshBtn').click(function () {
 
 // ----------------- Filter Button Functionality  ----------------
 
-// Populate filter modal dropdown menu
+$('#filterBtn').click(function () {
+  const $filterContent = $('#filterContent');
+
+  if ($('#personnelBtn').hasClass('active')) {
+    changeModalTitle('Filter Personnel');
+    // Filter for Personnel Table
+    $filterContent.html(`
+      <div class="mb-3">
+        <label for="filterDepartment" class="form-label">Department</label>
+        <select id="filterDepartment" class="form-select">
+          <option value="">All Departments</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="filterLocation" class="form-label">Location</label>
+        <select id="filterLocation" class="form-select">
+          <option value="">All Locations</option>
+        </select>
+      </div>
+    `);
+
+    // Dynamically add the Job Title filter if job titles exist
+    $.ajax({
+      url: 'libs/php/getAllJobTitles.php',
+      method: 'GET',
+      dataType: 'json',
+      success: function (response) {
+        if (response.status.code === 200 && response.data.length > 0) {
+          // Append Job Title filter to the modal if job titles exist
+          $filterContent.append(`
+            <div class="mb-3">
+              <label for="filterJobTitle" class="form-label">Job Title</label>
+              <select id="filterJobTitle" class="form-select">
+                <option value="">All Job Titles</option>
+              </select>
+            </div>
+          `);
+
+          // Populate Job Title dropdown
+          const $jobTitleDropdown = $('#filterJobTitle');
+          response.data.forEach((jobTitle) => {
+            $jobTitleDropdown.append(
+              `<option value="${jobTitle.name}">${jobTitle.name}</option>`
+            );
+          });
+        }
+      },
+      error: function () {
+        console.error('Failed to load job titles.');
+      },
+    });
+  } else if ($('#departmentsBtn').hasClass('active')) {
+    changeModalTitle('Filter Departments');
+    // Filter for Departments Table
+    $filterContent.html(`
+      <div class="mb-3">
+        <label for="filterLocation" class="form-label">Location</label>
+        <select id="filterLocation" class="form-select">
+          <option value="">All Locations</option>
+        </select>
+      </div>
+    `);
+  }
+
+  // Populate the dropdown options dynamically
+  populateFilterDropdowns();
+});
+
 function populateFilterDropdowns() {
+  let ajaxCallsRemaining = 2; // Track only two dropdowns for departments and locations
+
+  function onDropdownsPopulated() {
+    // Show the modal only when all dropdowns have been populated
+    if (ajaxCallsRemaining === 0) {
+      $('#filterModal').modal('show');
+    }
+  }
+
   // Populate Department Dropdown
   $.ajax({
     url: 'libs/php/getAllDepartments.php',
@@ -390,14 +473,23 @@ function populateFilterDropdowns() {
           );
           response.data.forEach((department) => {
             $departmentDropdown.append(
-              `<option value="${department.name}">${department.name}</option>`
+              `<option value="${department.id}">${department.name}</option>`
             );
           });
         }
+      } else {
+        console.error(
+          'Failed to load departments:',
+          response.status.description
+        );
       }
     },
     error: function () {
       console.error('Failed to load departments.');
+    },
+    complete: function () {
+      ajaxCallsRemaining--;
+      onDropdownsPopulated();
     },
   });
 
@@ -414,18 +506,178 @@ function populateFilterDropdowns() {
           $locationDropdown.append('<option value="">All Locations</option>');
           response.data.forEach((location) => {
             $locationDropdown.append(
-              `<option value="${location.name}">${location.name}</option>`
+              `<option value="${location.id}">${location.name}</option>`
             );
           });
         }
+      } else {
+        console.error('Failed to load locations:', response.status.description);
       }
     },
     error: function () {
       console.error('Failed to load locations.');
     },
+    complete: function () {
+      ajaxCallsRemaining--;
+      onDropdownsPopulated();
+    },
   });
 }
-// Disables fitler button when locations tab is active
+
+// function populateFilterDropdowns() {
+//   let ajaxCallsRemaining = 3; // Track the number of pending AJAX calls
+
+//   function onDropdownsPopulated() {
+//     // Show the modal only when all dropdowns have been populated
+//     if (ajaxCallsRemaining === 0) {
+//       $('#filterModal').modal('show');
+//     }
+//   }
+
+//   // Populate Department Dropdown
+//   $.ajax({
+//     url: 'libs/php/getAllDepartments.php',
+//     method: 'GET',
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === '200') {
+//         const $departmentDropdown = $('#filterDepartment');
+//         if ($departmentDropdown.length) {
+//           $departmentDropdown.empty();
+//           $departmentDropdown.append(
+//             '<option value="">All Departments</option>'
+//           );
+//           response.data.forEach((department) => {
+//             $departmentDropdown.append(
+//               `<option value="${department.id}">${department.name}</option>`
+//             );
+//           });
+//         }
+//       } else {
+//         console.error(
+//           'Failed to load departments:',
+//           response.status.description
+//         );
+//       }
+//     },
+//     error: function () {
+//       console.error('Failed to load departments.');
+//     },
+//     complete: function () {
+//       ajaxCallsRemaining--;
+//       onDropdownsPopulated();
+//     },
+//   });
+
+//   // Populate Location Dropdown
+//   $.ajax({
+//     url: 'libs/php/getAllLocations.php',
+//     method: 'GET',
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === '200') {
+//         const $locationDropdown = $('#filterLocation');
+//         if ($locationDropdown.length) {
+//           $locationDropdown.empty();
+//           $locationDropdown.append('<option value="">All Locations</option>');
+//           response.data.forEach((location) => {
+//             $locationDropdown.append(
+//               `<option value="${location.id}">${location.name}</option>`
+//             );
+//           });
+//         }
+//       } else {
+//         console.error('Failed to load locations:', response.status.description);
+//       }
+//     },
+//     error: function () {
+//       console.error('Failed to load locations.');
+//     },
+//     complete: function () {
+//       ajaxCallsRemaining--;
+//       onDropdownsPopulated();
+//     },
+//   });
+
+//   // Populate Job Title Dropdown
+//   $.ajax({
+//     url: 'libs/php/getAllJobTitles.php',
+//     method: 'GET',
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === 200 && response.data.length > 0) {
+//         const $filterContent = $('#filterContent');
+//         const jobTitleFilterHTML = `
+//           <div class="mb-3">
+//             <label for="filterJobTitle" class="form-label">Job Title</label>
+//             <select id="filterJobTitle" class="form-select">
+//               <option value="">All Job Titles</option>
+//             </select>
+//           </div>
+//         `;
+//         $filterContent.append(jobTitleFilterHTML);
+
+//         const $jobTitleDropdown = $('#filterJobTitle');
+//         if ($jobTitleDropdown.length) {
+//           $jobTitleDropdown.empty();
+//           $jobTitleDropdown.append('<option value="">All Job Titles</option>');
+//           response.data.forEach((jobTitle) => {
+//             $jobTitleDropdown.append(
+//               `<option value="${jobTitle.name}">${jobTitle.name}</option>`
+//             );
+//           });
+//         }
+//       }
+//     },
+//     error: function () {
+//       console.error('Failed to load job titles.');
+//     },
+//     complete: function () {
+//       ajaxCallsRemaining--;
+//       onDropdownsPopulated();
+//     },
+//   });
+// }
+
+// // Modified `#filterBtn` click handler to avoid hardcoding Job Title
+// $('#filterBtn').click(function () {
+//   const $filterContent = $('#filterContent');
+
+//   if ($('#personnelBtn').hasClass('active')) {
+//     changeModalTitle('Filter Personnel');
+//     // Filter for Personnel Table
+//     $filterContent.html(`
+//       <div class="mb-3">
+//         <label for="filterDepartment" class="form-label">Department</label>
+//         <select id="filterDepartment" class="form-select">
+//           <option value="">All Departments</option>
+//         </select>
+//       </div>
+//       <div class="mb-3">
+//         <label for="filterLocation" class="form-label">Location</label>
+//         <select id="filterLocation" class="form-select">
+//           <option value="">All Locations</option>
+//         </select>
+//       </div>
+//     `);
+//   } else if ($('#departmentsBtn').hasClass('active')) {
+//     changeModalTitle('Filter Departments');
+//     // Filter for Departments Table
+//     $filterContent.html(`
+//       <div class="mb-3">
+//         <label for="filterLocation" class="form-label">Location</label>
+//         <select id="filterLocation" class="form-select">
+//           <option value="">All Locations</option>
+//         </select>
+//       </div>
+//     `);
+//   }
+
+//   // Populate dropdown options dynamically
+//   populateFilterDropdowns();
+// });
+
+// Disables filter button when locations tab is active
 function toggleFilterButtonState() {
   if ($('#locationsBtn').hasClass('active')) {
     $('#filterBtn').prop('disabled', true); // Disable the filter button
@@ -433,32 +685,28 @@ function toggleFilterButtonState() {
     $('#filterBtn').prop('disabled', false); // Enable the filter button
   }
 }
+
 // Initialize filter button state on page load
 $(document).ready(function () {
   toggleFilterButtonState();
 });
-// Calls toggleFilterButtonState() when user changed tab
+
+// Calls toggleFilterButtonState() when user changes tab
 $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
   toggleFilterButtonState();
 });
+
 // Changes the filter modal title
 function changeModalTitle(newTitle) {
   $('#filterModal .modal-title').text(newTitle);
 }
-// calls changeModalTitle() when filter button is clicked, depending on which tab is active
-$('#filterBtn').click(function () {
-  if ($('#personnelBtn').hasClass('active')) {
-    changeModalTitle('Filter Personnel');
-  } else if ($('#departmentsBtn').hasClass('active')) {
-    changeModalTitle('Filter Departments');
-  }
-  $('#filterModal').modal('show');
-});
 
-// Calls eithr filterPersonnel.php or filterDepartment.php in order to apply filters
 $('#applyFilter').click(function () {
-  const selectedDepartment = $('#filterDepartment').val();
-  const selectedLocation = $('#filterLocation').val();
+  const selectedDepartmentID = $('#filterDepartment').val(); // Get departmentID
+  const selectedLocationID = $('#filterLocation').val(); // Get locationID
+  const selectedJobTitle = $('#filterJobTitle').length
+    ? $('#filterJobTitle').val()
+    : null; // Get job title if available
 
   if ($('#personnelBtn').hasClass('active')) {
     // Filter Personnel Table
@@ -466,8 +714,9 @@ $('#applyFilter').click(function () {
       url: 'libs/php/filterPersonnel.php',
       method: 'GET',
       data: {
-        department: selectedDepartment,
-        location: selectedLocation,
+        departmentID: selectedDepartmentID || '', // Use departmentID
+        locationID: selectedLocationID || '', // Use locationID
+        jobTitle: selectedJobTitle || '', // Optional job title
       },
       dataType: 'json',
       success: function (response) {
@@ -482,6 +731,9 @@ $('#applyFilter').click(function () {
                 <td class="align-middle text-nowrap">${
                   person.lastName || 'N/A'
                 }, ${person.firstName || 'N/A'}</td>
+                <td class="align-middle text-nowrap d-md-table-cell">${
+                  person.jobTitle || ''
+                }</td>
                 <td class="align-middle text-nowrap d-md-table-cell">${
                   person.departmentName || 'N/A'
                 }</td>
@@ -510,10 +762,15 @@ $('#applyFilter').click(function () {
 
           // Close the modal
           $('#filterModal').modal('hide');
+        } else {
+          console.error(
+            'Failed to filter personnel:',
+            response.status.description
+          );
         }
       },
       error: function (xhr, status, error) {
-        console.error('Error during filter request:', status, error);
+        console.error('Error during personnel filter request:', status, error);
       },
     });
   } else if ($('#departmentsBtn').hasClass('active')) {
@@ -522,7 +779,8 @@ $('#applyFilter').click(function () {
       url: 'libs/php/filterDepartments.php',
       method: 'GET',
       data: {
-        location: selectedLocation, // Only location filter applies to departments
+        locationID: selectedLocationID || '', // Use locationID
+        departmentID: selectedDepartmentID || '', // Use departmentID if needed
       },
       dataType: 'json',
       success: function (response) {
@@ -551,61 +809,35 @@ $('#applyFilter').click(function () {
 
           // Close the modal
           $('#filterModal').modal('hide');
+        } else {
+          console.error(
+            'Failed to filter departments:',
+            response.status.description
+          );
         }
       },
       error: function (xhr, status, error) {
-        console.error('Error during filter request:', status, error);
+        console.error('Error during department filter request:', status, error);
       },
     });
   }
 });
 
-// Opens filter modal and populates dropsdowns
-$('#filterBtn').click(function () {
-  const $filterContent = $('#filterContent');
+// ----------------- Add Personnel Button Functionality  ----------------
 
-  if ($('#personnelBtn').hasClass('active')) {
-    // Filter for Personnel Table
-    $filterContent.html(`
-      <div class="mb-3">
-        <label for="filterDepartment" class="form-label">Department</label>
-        <select id="filterDepartment" class="form-select">
-          <option value="">All Departments</option>
-          <!-- Options will be dynamically added here -->
-        </select>
-      </div>
-      <div class="mb-3">
-        <label for="filterLocation" class="form-label">Location</label>
-        <select id="filterLocation" class="form-select">
-          <option value="">All Locations</option>
-          <!-- Options will be dynamically added here -->
-        </select>
-      </div>
-    `);
-  } else if ($('#departmentsBtn').hasClass('active')) {
-    // Filter for Departments Table
-    $filterContent.html(`
-      <div class="mb-3">
-        <label for="filterLocation" class="form-label">Location</label>
-        <select id="filterLocation" class="form-select">
-          <option value="">All Locations</option>
-          <!-- Options will be dynamically added here -->
-        </select>
-      </div>
-    `);
-  }
-
-  // Populate dropdown options dynamically
-  populateFilterDropdowns();
-
-  // Open the modal
-  $('#filterModal').modal('show');
-});
-
-// ----------------- Add Button Functionality  ----------------
-
+// Used for formatting names before submission to DB
+function capitaliseFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
 // Opens add modal, depending on currently open tab
 $('#addBtn').click(function () {
+  if (!isAuth) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('You are not authorized to add new personnel.');
+    $('#messageModal').modal('show'); // Trigger the message modal
+    return;
+  }
+
   if ($('#personnelBtn').hasClass('active')) {
     // Reset the form
     $('#addPersonnelForm')[0].reset();
@@ -618,16 +850,13 @@ $('#addBtn').click(function () {
   } else {
     if ($('#departmentsBtn').hasClass('active')) {
       console.log('Add Depts');
-      // Logic for adding a department can be added here
       return;
     } else {
       console.log('Add location');
-      // Logic for adding a location can be added here
       return;
     }
   }
 });
-
 // Function to populate the Department and Location dropdowns
 function populateAddPersonnelDropdowns() {
   // Populate Department Dropdown
@@ -680,56 +909,96 @@ function populateAddPersonnelDropdowns() {
 // When new personnel details have been added, sends data to insertPersonnel.php script to add personnel to DB --- currently returning fatal error!!!!!
 // Will need to support only one location per department
 $('#savePersonnelBtn').click(function () {
-  const firstName = $('#addFirstName').val().trim();
-  const lastName = $('#addLastName').val().trim();
+  // Get and trim the inputs
+  let firstName = $('#addFirstName').val().trim();
+  let lastName = $('#addLastName').val().trim();
   const departmentID = $('#addDepartment').val();
   const email = $('#addEmail').val().trim();
   const locationID = $('#addLocation').val();
 
+  // Close the modal immediately
+  $('#addPersonnelModal').modal('hide');
+
+  // Check if the user is authorized
+  if (!isAuth) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('You are not authorized to add new personnel.');
+    $('#messageModal').modal('show');
+    return;
+  }
+
+  // Check if all fields are filled
   if (!firstName || !lastName || !departmentID || !email || !locationID) {
-    // You can reuse the message modal for errors if needed
     $('#messageModal .modal-title').text('Error');
     $('#messageContent').text('Please fill out all fields.');
     $('#messageModal').modal('show');
     return;
   }
 
-  // Send AJAX request to add personnel
+  // Capitalise first name and last name
+  firstName = capitaliseFirstLetter(firstName);
+  lastName = capitaliseFirstLetter(lastName);
+
+  // Validate location and department association
   $.ajax({
-    url: 'libs/php/insertPersonnel.php',
+    url: 'libs/php/validateDepartmentLocation.php',
     method: 'POST',
     data: {
-      firstName,
-      lastName,
-      departmentID,
-      email,
-      locationID,
+      departmentID: departmentID,
+      locationID: locationID,
     },
     dataType: 'json',
     success: function (response) {
-      if (response.status.code === '200') {
-        // Close the Add Personnel modal
-        $('#addPersonnelModal').modal('hide');
-
-        // Refresh the Personnel Table
-        populatePersonnelTable();
-
-        // Show the success message using the modal
-        $('#messageModal .modal-title').text('Success');
-        $('#messageContent').text('Personnel added successfully!');
-        $('#messageModal').modal('show');
-      } else {
-        console.error('Error adding personnel:', response.status.description);
+      if (response.status.code === '400') {
         $('#messageModal .modal-title').text('Error');
-        $('#messageContent').text('Failed to add personnel. Please try again.');
+        $('#messageContent').text(response.status.description);
         $('#messageModal').modal('show');
+        return;
       }
+
+      // Send AJAX request to add personnel
+      $.ajax({
+        url: 'libs/php/insertPersonnel.php',
+        method: 'POST',
+        data: {
+          firstName,
+          lastName,
+          departmentID,
+          email,
+        },
+        dataType: 'json',
+        success: function (response) {
+          if (response.status.code === '200') {
+            // Refresh the Personnel Table
+            populatePersonnelTable();
+
+            // Show success message
+            $('#messageModal .modal-title').text('Success');
+            $('#messageContent').text('Personnel added successfully!');
+            $('#messageModal').modal('show');
+          } else {
+            $('#messageModal .modal-title').text('Error');
+            $('#messageContent').text(
+              'Failed to add personnel. Please try again.'
+            );
+            $('#messageModal').modal('show');
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error('Error during add request:', status, error);
+          $('#messageModal .modal-title').text('Error');
+          $('#messageContent').text(
+            'An error occurred while adding personnel. Please try again.'
+          );
+          $('#messageModal').modal('show');
+        },
+      });
     },
     error: function (xhr, status, error) {
-      console.error('Error during add request:', status, error);
+      console.error('Error validating department and location:', status, error);
       $('#messageModal .modal-title').text('Error');
       $('#messageContent').text(
-        'An error occurred while adding personnel. Please try again.'
+        'Failed to validate department and location. Please try again.'
       );
       $('#messageModal').modal('show');
     },
@@ -754,58 +1023,58 @@ $('#locationsBtn').click(function () {
 });
 
 // INCOMPLETE? - Opens edit personnel modal
-$('#editPersonnelModal').on('show.bs.modal', function (e) {
-  $.ajax({
-    url: 'https://coding.itcareerswitch.co.uk/companydirectory/libs/php/getPersonnelByID.php',
-    type: 'POST',
-    dataType: 'json',
-    data: {
-      // Retrieve the data-id attribute from the calling button
-      // see https://getbootstrap.com/docs/5.0/components/modal/#varying-modal-content
-      // for the non-jQuery JavaScript alternative
-      id: $(e.relatedTarget).attr('data-id'),
-    },
-    success: function (result) {
-      var resultCode = result.status.code;
+// $('#editPersonnelModal').on('show.bs.modal', function (e) {
+//   $.ajax({
+//     url: 'https://coding.itcareerswitch.co.uk/companydirectory/libs/php/getPersonnelByID.php',
+//     type: 'POST',
+//     dataType: 'json',
+//     data: {
+//       // Retrieve the data-id attribute from the calling button
+//       // see https://getbootstrap.com/docs/5.0/components/modal/#varying-modal-content
+//       // for the non-jQuery JavaScript alternative
+//       id: $(e.relatedTarget).attr('data-id'),
+//     },
+//     success: function (result) {
+//       var resultCode = result.status.code;
 
-      if (resultCode == 200) {
-        // Update the hidden input with the employee id so that
-        // it can be referenced when the form is submitted
+//       if (resultCode == 200) {
+//         // Update the hidden input with the employee id so that
+//         // it can be referenced when the form is submitted
 
-        $('#editPersonnelEmployeeID').val(result.data.personnel[0].id);
+//         $('#editPersonnelEmployeeID').val(result.data.personnel[0].id);
 
-        $('#editPersonnelFirstName').val(result.data.personnel[0].firstName);
-        $('#editPersonnelLastName').val(result.data.personnel[0].lastName);
-        $('#editPersonnelJobTitle').val(result.data.personnel[0].jobTitle);
-        $('#editPersonnelEmailAddress').val(result.data.personnel[0].email);
+//         $('#editPersonnelFirstName').val(result.data.personnel[0].firstName);
+//         $('#editPersonnelLastName').val(result.data.personnel[0].lastName);
+//         $('#editPersonnelJobTitle').val(result.data.personnel[0].jobTitle);
+//         $('#editPersonnelEmailAddress').val(result.data.personnel[0].email);
 
-        $('#editPersonnelDepartment').html('');
+//         $('#editPersonnelDepartment').html('');
 
-        $.each(result.data.department, function () {
-          $('#editPersonnelDepartment').append(
-            $('<option>', {
-              value: this.id,
-              text: this.name,
-            })
-          );
-        });
+//         $.each(result.data.department, function () {
+//           $('#editPersonnelDepartment').append(
+//             $('<option>', {
+//               value: this.id,
+//               text: this.name,
+//             })
+//           );
+//         });
 
-        $('#editPersonnelDepartment').val(
-          result.data.personnel[0].departmentID
-        );
-      } else {
-        $('#editPersonnelModal .modal-title').replaceWith(
-          'Error retrieving data'
-        );
-      }
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      $('#editPersonnelModal .modal-title').replaceWith(
-        'Error retrieving data'
-      );
-    },
-  });
-});
+//         $('#editPersonnelDepartment').val(
+//           result.data.personnel[0].departmentID
+//         );
+//       } else {
+//         $('#editPersonnelModal .modal-title').replaceWith(
+//           'Error retrieving data'
+//         );
+//       }
+//     },
+//     error: function (jqXHR, textStatus, errorThrown) {
+//       $('#editPersonnelModal .modal-title').replaceWith(
+//         'Error retrieving data'
+//       );
+//     },
+//   });
+// });
 
 // Executes when the form button with type="submit" is clicked
 $('#editPersonnelForm').on('submit', function (e) {
@@ -816,3 +1085,6 @@ $('#editPersonnelForm').on('submit', function (e) {
 
   // AJAX call to save form data
 });
+
+// Even if search was not event driven, conflicts could occur - need handling for if user clicks on result that is no longer there
+// test multiple user functionality with multiple browser sesstions

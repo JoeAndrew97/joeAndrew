@@ -159,6 +159,36 @@
 
     <!----------     Modals      ---------->
 
+    <!--- Message Modal -->
+
+    <div id="messageModal" class="modal fade" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Message</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="messageContent"></p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-bs-dismiss="modal"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Filter Search Modal -->
 
     <div id="filterModal" class="modal fade" tabindex="-1" aria-hidden="true">
@@ -384,41 +414,7 @@
         </div>
       </div>
 
-      <!-------- Message Modal ---------->
-
-      <div
-        id="messageModal"
-        class="modal fade"
-        tabindex="-1"
-        aria-hidden="true"
-      >
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Success</h5>
-              <button
-                type="button"
-                class="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div class="modal-body">
-              <p id="messageContent"></p>
-            </div>
-            <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-primary"
-                data-bs-dismiss="modal"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      
 
     <script src="./libs/js/jquery-3.6.0.min.js"></script>
     <script src="./libs/js/bootstrap.bundle.min.js"></script>

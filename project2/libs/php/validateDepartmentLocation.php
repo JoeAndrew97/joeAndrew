@@ -21,13 +21,10 @@
     }
 
     // Validate inputs to prevent SQL injection
-    $firstName = $_POST['firstName'];
-    $lastName = $_POST['lastName'];
-    $jobTitle = $_POST['jobTitle'];
-    $email = $_POST['email'];
     $departmentID = $_POST['departmentID'];
+    $locationID = $_POST['locationID'];
 
-    if (!is_numeric($departmentID) || empty($firstName) || empty($lastName) || empty($email)) {
+    if (!is_numeric($departmentID) || !is_numeric($locationID)) {
         echo json_encode([
             'status' => [
                 'code' => '400',
@@ -38,19 +35,21 @@
         exit;
     }
 
-    // Use prepared statement to insert personnel data
+    // Use prepared statement to validate department and location
     $query = $conn->prepare(
-        'INSERT INTO personnel (firstName, lastName, jobTitle, email, departmentID) VALUES (?, ?, ?, ?, ?)'
+        'SELECT * FROM department WHERE id = ? AND locationID = ?'
     );
 
-    $query->bind_param('ssssi', $firstName, $lastName, $jobTitle, $email, $departmentID);
+    $query->bind_param('ii', $departmentID, $locationID);
+    $query->execute();
+    $result = $query->get_result();
 
-    if (!$query->execute()) {
+    if ($result->num_rows === 0) {
         echo json_encode([
             'status' => [
                 'code' => '400',
-                'name' => 'executed',
-                'description' => 'Query execution failed',
+                'name' => 'error',
+                'description' => 'The selected department is not associated with the specified location.',
             ],
         ]);
         exit;
@@ -60,10 +59,11 @@
         'status' => [
             'code' => '200',
             'name' => 'success',
-            'description' => 'Personnel added successfully',
+            'description' => 'Validation successful',
         ],
     ]);
 
     $query->close();
     $conn->close();
 ?>
+

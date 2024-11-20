@@ -40,17 +40,24 @@
     $types = '';
 
     // Add filters dynamically
-    if (isset($_REQUEST['department']) && !empty($_REQUEST['department'])) {
-        $query .= ' AND `d`.`name` = ?';
-        $params[] = $_REQUEST['department'];
-        $types .= 's';
+    if (isset($_REQUEST['departmentID']) && !empty($_REQUEST['departmentID'])) {
+        $query .= ' AND `d`.`id` = ?'; // Use departmentID
+        $params[] = $_REQUEST['departmentID'];
+        $types .= 'i'; // Integer type
     }
 
-    if (isset($_REQUEST['location']) && !empty($_REQUEST['location'])) {
-        $query .= ' AND `l`.`name` = ?';
-        $params[] = $_REQUEST['location'];
-        $types .= 's';
+    if (isset($_REQUEST['locationID']) && !empty($_REQUEST['locationID'])) {
+        $query .= ' AND `l`.`id` = ?'; // Use locationID
+        $params[] = $_REQUEST['locationID'];
+        $types .= 'i'; // Integer type
     }
+
+    if (isset($_REQUEST['jobTitle']) && $_REQUEST['jobTitle'] !== '') {
+        $query .= ' AND `p`.`jobTitle` = ?'; // Filter by jobTitle
+        $params[] = $_REQUEST['jobTitle'];
+        $types .= 's'; // String type
+}
+
 
     $query .= ' ORDER BY `p`.`lastName`, `p`.`firstName`, `d`.`name`, `l`.`name`';
 
