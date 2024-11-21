@@ -39,12 +39,13 @@ if (empty($name)) {
 $formattedName = ucwords(strtolower($name));
 
 // Check if the location already exists (case-insensitive)
-$query = $conn->prepare('SELECT * FROM location WHERE LOWER(name) = LOWER(?)');
+$query = $conn->prepare('SELECT COUNT(*) AS count FROM location WHERE LOWER(name) = LOWER(?)');
 $query->bind_param('s', $formattedName);
 $query->execute();
 $result = $query->get_result();
+$row = $result->fetch_assoc();
 
-if ($result->num_rows > 0) {
+if ($row['count'] > 0) {
     echo json_encode([
         'status' => [
             'code' => '400',
@@ -81,6 +82,4 @@ echo json_encode([
 
 $query->close();
 $conn->close();
-
 ?>
-

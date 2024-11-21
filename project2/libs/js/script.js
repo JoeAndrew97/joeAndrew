@@ -841,160 +841,14 @@ $('#addBtn').click(function () {
     $('#addDepartmentForm')[0].reset();
     populateAddDepartmentDropdowns();
     $('#addDepartmentModal').modal('show');
+  } else if ($('#locationsBtn').hasClass('active')) {
+    // Reset and show Add Location Modal
+    $('#addLocationForm')[0].reset();
+    $('#addLocationModal').modal('show');
   } else {
     console.log('Add functionality not implemented for this tab.');
   }
 });
-
-$('#addBtn').click(function () {
-  if (!isAuth) {
-    $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('You are not authorized to add new locations.');
-    $('#messageModal').modal('show');
-    return;
-  }
-
-  if ($('#locationsBtn').hasClass('active')) {
-    // Reset the form
-    $('#addLocationForm')[0].reset();
-
-    // Open the Add Location modal
-    $('#addLocationModal').modal('show');
-  } else if ($('#departmentsBtn').hasClass('active')) {
-    // Handle adding a department if necessary
-    console.log('Open Add Department Modal');
-  } else if ($('#personnelBtn').hasClass('active')) {
-    // Handle adding personnel if necessary
-    console.log('Open Add Personnel Modal');
-  }
-});
-
-// Save New Location
-$('#saveLocationBtn').click(function () {
-  const locationName = $('#addLocationName').val().trim();
-
-  // Close the modal immediately
-  $('#addLocationModal').modal('hide');
-
-  // Check if the user is authorized
-  if (!isAuth) {
-    $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('You are not authorized to add new locations.');
-    $('#messageModal').modal('show');
-    return;
-  }
-
-  // Check if the location name is filled
-  if (!locationName) {
-    $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('Please enter a location name.');
-    $('#messageModal').modal('show');
-    return;
-  }
-
-  // Capitalize the first letter of each word
-  const formattedLocationName = locationName
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-
-  // Validate the formatted location name
-  $.ajax({
-    url: 'libs/php/insertLocation.php',
-    method: 'POST',
-    data: {
-      name: formattedLocationName,
-    },
-    dataType: 'json',
-    success: function (response) {
-      if (response.status.code === '200') {
-        // Refresh the Locations Table
-        populateLocationsTable();
-
-        // Show success message
-        $('#messageModal .modal-title').text('Success');
-        $('#messageContent').text('Location added successfully!');
-        $('#messageModal').modal('show');
-      } else if (response.status.code === '400') {
-        // Show error message if the location already exists
-        $('#messageModal .modal-title').text('Error');
-        $('#messageContent').text(response.status.description);
-        $('#messageModal').modal('show');
-      } else {
-        $('#messageModal .modal-title').text('Error');
-        $('#messageContent').text('Failed to add location. Please try again.');
-        $('#messageModal').modal('show');
-      }
-    },
-    error: function (xhr, status, error) {
-      console.error('Error during add request:', status, error);
-      $('#messageModal .modal-title').text('Error');
-      $('#messageContent').text(
-        'An error occurred while adding the location. Please try again.'
-      );
-      $('#messageModal').modal('show');
-    },
-  });
-});
-
-// $('#saveLocationBtn').click(function () {
-//   const locationName = $('#addLocationName').val().trim();
-
-//   // Close the modal immediately
-//   $('#addLocationModal').modal('hide');
-
-//   // Check if the user is authorized
-//   if (!isAuth) {
-//     $('#messageModal .modal-title').text('Error');
-//     $('#messageContent').text('You are not authorized to add new locations.');
-//     $('#messageModal').modal('show');
-//     return;
-//   }
-
-//   // Check if the location name is filled
-//   if (!locationName) {
-//     $('#messageModal .modal-title').text('Error');
-//     $('#messageContent').text('Please enter a location name.');
-//     $('#messageModal').modal('show');
-//     return;
-//   }
-
-//   // Capitalize the location name
-//   const formattedLocationName = capitaliseFirstLetter(locationName);
-
-//   // Send AJAX request to add the new location
-//   $.ajax({
-//     url: 'libs/php/insertLocation.php',
-//     method: 'POST',
-//     data: {
-//       name: formattedLocationName, // Pass the location name to the PHP script
-//     },
-//     dataType: 'json',
-//     success: function (response) {
-//       if (response.status.code === '200') {
-//         // Refresh the Locations Table
-//         populateLocationsTable();
-
-//         // Show success message
-//         $('#messageModal .modal-title').text('Success');
-//         $('#messageContent').text('Location added successfully!');
-//         $('#messageModal').modal('show');
-//       } else {
-//         $('#messageModal .modal-title').text('Error');
-//         $('#messageContent').text('Failed to add location. Please try again.');
-//         $('#messageModal').modal('show');
-//       }
-//     },
-//     error: function (xhr, status, error) {
-//       console.error('Error during add request:', status, error);
-//       $('#messageModal .modal-title').text('Error');
-//       $('#messageContent').text(
-//         'An error occurred while adding the location. Please try again.'
-//       );
-//       $('#messageModal').modal('show');
-//     },
-//   });
-// });
 
 // Function to populate the Department and Location dropdowns
 function populateAddPersonnelDropdowns(callback) {
@@ -1283,107 +1137,133 @@ $('#saveDepartmentBtn').click(function () {
     },
   });
 });
-//   const departmentName = $('#addDepartmentName').val().trim();
-//   const locationID = $('#addDepartmentLocation').val();
 
-//   // Close the modal immediately
-//   $('#addDepartmentModal').modal('hide');
+// Function to capitalize the first letter of each word
+function capitaliseFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
 
-//   // Check if the user is authorized
-//   if (!isAuth) {
-//     $('#messageModal .modal-title').text('Error');
-//     $('#messageContent').text('You are not authorized to add new departments.');
-//     $('#messageModal').modal('show');
-//     return;
-//   }
+// Handle the "Save" button click for adding a location
+$('#saveLocationBtn').click(function () {
+  const locationName = $('#addLocationName').val().trim();
 
-//   // Check if all fields are filled
-//   if (!departmentName || !locationID) {
-//     $('#messageModal .modal-title').text('Error');
-//     $('#messageContent').text('Please fill out all required fields.');
-//     $('#messageModal').modal('show');
-//     return;
-//   }
+  // Close the modal immediately
+  $('#addLocationModal').modal('hide');
 
-//   // Capitalize department name
-//   const formattedDepartmentName = capitaliseFirstLetter(departmentName);
+  // Check if the user is authorized
+  if (!isAuth) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('You are not authorized to add new locations.');
+    $('#messageModal').modal('show');
+    return;
+  }
 
-//   // Validate department-location association before proceeding
-//   $.ajax({
-//     url: 'libs/php/validateDepartmentLocation.php',
-//     method: 'POST',
-//     data: {
-//       departmentID: null, // New department, so departmentID is not needed
-//       locationID: locationID,
-//     },
-//     dataType: 'json',
-//     success: function (response) {
-//       if (response.status.code === '400') {
-//         // Show validation error if the department-location association is invalid
-//         $('#messageModal .modal-title').text('Error');
-//         $('#messageContent').text(response.status.description);
-//         $('#messageModal').modal('show');
-//         return;
-//       }
+  // Check if the location name is filled
+  if (!locationName) {
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('Please enter a location name.');
+    $('#messageModal').modal('show');
+    return;
+  }
 
-//       // If validation passes, proceed to insert the new department
-//       $.ajax({
-//         url: 'libs/php/insertDepartment.php',
-//         method: 'POST',
-//         data: {
-//           name: formattedDepartmentName, // 'name' matches the PHP script
-//           locationID: locationID, // 'locationID' matches the PHP script
-//         },
-//         dataType: 'json',
-//         success: function (response) {
-//           if (response.status.code === '200') {
-//             // Refresh the Departments Table
-//             populateDepartmentsTable();
+  // Capitalize the first letter of each word in the location name
+  const formattedLocationName = locationName
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 
-//             // Show success message
-//             $('#messageModal .modal-title').text('Success');
-//             $('#messageContent').text('Department added successfully!');
-//             $('#messageModal').modal('show');
-//           } else {
-//             $('#messageModal .modal-title').text('Error');
-//             $('#messageContent').text(
-//               'Failed to add department. Please try again.'
-//             );
-//             $('#messageModal').modal('show');
-//           }
-//         },
-//         error: function (xhr, status, error) {
-//           console.error('Error during add request:', status, error);
-//           $('#messageModal .modal-title').text('Error');
-//           $('#messageContent').text(
-//             'An error occurred while adding the department. Please try again.'
-//           );
-//           $('#messageModal').modal('show');
-//         },
-//       });
-//     },
-//     error: function (xhr, status, error) {
-//       console.error('Error validating department and location:', status, error);
-//       $('#messageModal .modal-title').text('Error');
-//       $('#messageContent').text(
-//         'Failed to validate department and location. Please try again.'
-//       );
-//       $('#messageModal').modal('show');
-//     },
-//   });
-// });
+  // Send AJAX request to add the new location
+  $.ajax({
+    url: 'libs/php/insertLocation.php',
+    method: 'POST',
+    data: {
+      name: formattedLocationName, // Pass the location name to the PHP script
+    },
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Refresh the Locations Table
+        populateLocationsTable();
 
-// ----------------- Add Department Button Functionality  ----------------
+        // Show success message
+        $('#messageModal .modal-title').text('Success');
+        $('#messageContent').text('Location added successfully!');
+        $('#messageModal').modal('show');
+      } else if (response.status.code === '400') {
+        // Show error message if the location already exists
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(response.status.description);
+        $('#messageModal').modal('show');
+      } else {
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text('Failed to add location. Please try again.');
+        $('#messageModal').modal('show');
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error during add request:', status, error);
+      $('#messageModal .modal-title').text('Error');
+      $('#messageContent').text(
+        'An error occurred while adding the location. Please try again.'
+      );
+      $('#messageModal').modal('show');
+    },
+  });
+});
 
-// ----------------- INCOMPLETE  ----------------
+// Refresh the Locations Table
+function populateLocationsTable() {
+  const $locationTableBody = $('#locationTableBody');
+  $locationTableBody.empty(); // Clear any existing rows
 
-// INCOMPLETE - Refreshes table when personnal tab button is clicked
+  // Fetch the latest location data from the server
+  $.ajax({
+    url: 'libs/php/getAllLocations.php', // Endpoint to fetch location data
+    method: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Populate the table with the fetched data
+        response.data.forEach((location) => {
+          const rowHtml = `
+            <tr>
+              <td class="align-middle text-nowrap">${
+                location.name || 'Unknown'
+              }</td>
+              <td class="align-middle text-end text-nowrap">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editLocationModal" data-id="${
+                  location.id
+                }">
+                  <i class="fa-solid fa-pencil fa-fw"></i>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm deleteLocationBtn" data-id="${
+                  location.id
+                }">
+                  <i class="fa-solid fa-trash fa-fw"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+          $locationTableBody.append(rowHtml);
+        });
+      } else {
+        console.error(
+          'Failed to fetch locations:',
+          response.status.description
+        );
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching locations:', status, error);
+    },
+  });
+}
+
+// -----------------------------------------------------------------------------------------
 
 $('#personnelBtn').click(function () {
   // Call function to refresh personnel table
 });
-
-// ------------------------------------------------------------------
 
 // INCOMPLETE - Refreshes table when departmets tab button is clicked
 $('#departmentsBtn').click(function () {
@@ -1463,3 +1343,4 @@ $('#editPersonnelForm').on('submit', function (e) {
 // test multiple user functionality with multiple browser sesstions
 
 // ADD PRELOADER
+// HANDLE IF USER PRESSES ENTER WHEN A MODAL IS OPEN
