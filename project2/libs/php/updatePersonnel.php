@@ -1,92 +1,140 @@
 <?php
-
-// Enable error reporting for development (remove for production)
+// Enable error reporting for development (remove in production)
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
-$executionStartTime = microtime(true);
-
-// Include the configuration file for database credentials
 include("config.php");
 
 header('Content-Type: application/json; charset=UTF-8');
 
-// Establish the database connection
 $conn = new mysqli($cd_host, $cd_user, $cd_password, $cd_dbname, $cd_port, $cd_socket);
 
 if (mysqli_connect_errno()) {
-    
-    $output['status']['code'] = "300";
-    $output['status']['name'] = "failure";
-    $output['status']['description'] = "database unavailable";
-    $output['status']['returnedIn'] = (microtime(true) - $executionStartTime) / 1000 . " ms";
-    $output['data'] = [];
-
-    mysqli_close($conn);
-
-    echo json_encode($output);
-
+    echo json_encode([
+        'status' => [
+            'code' => '300',
+            'name' => 'failure',
+            'description' => 'Database unavailable',
+        ],
+    ]);
     exit;
 }
 
-// Check if the request method is POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    $output['status']['code'] = "405";
-    $output['status']['name'] = "failure";
-    $output['status']['description'] = "Invalid request method";
-    echo json_encode($output);
+// Validate inputs
+$id = $_POST['id'] ?? null;
+$firstName = $_POST['firstName'] ?? null;
+$lastName = $_POST['lastName'] ?? null;
+$jobTitle = $_POST['jobTitle'] ?? ''; // Optional
+$email = $_POST['email'] ?? null;
+$departmentID = $_POST['departmentID'] ?? null;
+
+if (!is_numeric($id) || !is_numeric($departmentID) || empty($firstName) || empty($lastName) || empty($email)) {
+    echo json_encode([
+        'status' => [
+            'code' => '400',
+            'name' => 'error',
+            'description' => 'Invalid or missing inputs.',
+        ],
+    ]);
     exit;
 }
 
-// Get input data from the POST request
-$id = $_POST['id'];
-$firstName = $_POST['firstName'];
-$lastName = $_POST['lastName'];
-$jobTitle = $_POST['jobTitle'];
-$email = $_POST['email'];
-$departmentID = $_POST['departmentID'];
+// Step 1: Fetch the locationID associated with the departmentID
+$locationQuery = $conn->prepare('SELECT locationID FROM department WHERE id = ?');
+$locationQuery->bind_param('i', $departmentID);
+$locationQuery->execute();
+$locationResult = $locationQuery->get_result();
 
-// Validate input data
-if (empty($id) || empty($firstName) || empty($lastName) || empty($email) || empty($departmentID)) {
-    $output['status']['code'] = "400";
-    $output['status']['name'] = "failure";
-    $output['status']['description'] = "Missing required fields";
-    echo json_encode($output);
+if ($locationResult->num_rows === 0) {
+    echo json_encode([
+        'status' => [
+            'code' => '400',
+            'name' => 'error',
+            'description' => 'Invalid department ID.',
+        ],
+    ]);
+    $locationQuery->close();
+    $conn->close();
     exit;
 }
 
-// Prepare and execute the SQL query to update the personnel record
-$stmt = $conn->prepare("UPDATE personnel SET firstName = ?, lastName = ?, jobTitle = ?, email = ?, departmentID = ? WHERE id = ?");
+$locationRow = $locationResult->fetch_assoc();
+$departmentLocationID = $locationRow['locationID'];
+$locationQuery->close();
 
-if (!$stmt) {
-    $output['status']['code'] = "500";
-    $output['status']['name'] = "failure";
-    $output['status']['description'] = "Failed to prepare statement: " . $conn->error;
-    echo json_encode($output);
+// Step 2: Validate that the employee is assigned a valid department for their location
+// Fetch the employee's current locationID based on departmentID
+$employeeLocationQuery = $conn->prepare('SELECT d.locationID FROM personnel p JOIN department d ON p.departmentID = d.id WHERE p.id = ?');
+$employeeLocationQuery->bind_param('i', $id);
+$employeeLocationQuery->execute();
+$employeeLocationResult = $employeeLocationQuery->get_result();
+
+if ($employeeLocationResult->num_rows === 0) {
+    echo json_encode([
+        'status' => [
+            'code' => '400',
+            'name' => 'error',
+            'description' => 'Invalid employee ID or department association.',
+        ],
+    ]);
+    $employeeLocationQuery->close();
+    $conn->close();
     exit;
 }
 
-$stmt->bind_param('ssssii', $firstName, $lastName, $jobTitle, $email, $departmentID, $id);
+$employeeLocationRow = $employeeLocationResult->fetch_assoc();
+$employeeLocationID = $employeeLocationRow['locationID'];
+$employeeLocationQuery->close();
 
-if ($stmt->execute()) {
-    $output['status']['code'] = "200";
-    $output['status']['name'] = "ok";
-    $output['status']['description'] = "Employee updated successfully";
+// Check if the department's location matches the employee's location
+if ($departmentLocationID !== $employeeLocationID) {
+    echo json_encode([
+        'status' => [
+            'code' => '400',
+            'name' => 'error',
+            'description' => 'The selected department does not belong to the employee\'s location.',
+        ],
+    ]);
+    $conn->close();
+    exit;
+}
+
+// Step 3: Update the personnel record
+$updateQuery = $conn->prepare('UPDATE personnel SET firstName = ?, lastName = ?, jobTitle = ?, email = ?, departmentID = ? WHERE id = ?');
+
+if (!$updateQuery) {
+    echo json_encode([
+        'status' => [
+            'code' => '500',
+            'name' => 'failure',
+            'description' => 'Failed to prepare the update query: ' . $conn->error,
+        ],
+    ]);
+    $conn->close();
+    exit;
+}
+
+$updateQuery->bind_param('ssssii', $firstName, $lastName, $jobTitle, $email, $departmentID, $id);
+
+if ($updateQuery->execute()) {
+    echo json_encode([
+        'status' => [
+            'code' => '200',
+            'name' => 'success',
+            'description' => 'Employee updated successfully.',
+        ],
+    ]);
 } else {
-    $output['status']['code'] = "500";
-    $output['status']['name'] = "failure";
-    $output['status']['description'] = "Failed to execute statement: " . $stmt->error;
+    echo json_encode([
+        'status' => [
+            'code' => '500',
+            'name' => 'failure',
+            'description' => 'Failed to execute the update query: ' . $updateQuery->error,
+        ],
+    ]);
 }
 
-// Close the statement and the database connection
-$stmt->close();
-mysqli_close($conn);
-
-// Add timing information to the response
-$output['status']['returnedIn'] = (microtime(true) - $executionStartTime) / 1000 . " ms";
-
-// Output the response as JSON
-echo json_encode($output);
-
+$updateQuery->close();
+$conn->close();
 ?>
 

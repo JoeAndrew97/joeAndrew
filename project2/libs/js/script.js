@@ -1332,6 +1332,37 @@ $('#locationsBtn').click(function () {
 
 // -----------------  Edit Functionality  ---------------------
 
+function populateLocationsDropdown() {
+  // Fetch locations via AJAX
+  $.ajax({
+    url: 'libs/php/getAllLocations.php',
+    type: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        const $locationDropdown = $('#editPersonnelLocation');
+        $locationDropdown.empty(); // Clear existing options
+
+        response.data.forEach((location) => {
+          const option = `<option value="${location.id}">${location.name}</option>`;
+          $locationDropdown.append(option);
+        });
+      } else {
+        console.error(
+          'Failed to fetch locations:',
+          response.status.description
+        );
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching locations:', status, error);
+    },
+  });
+}
+// Call this function when the edit modal is opened
+$('#editPersonnelModal').on('show.bs.modal', function () {
+  populateLocationsDropdown();
+});
 function populateEditModal(employeeId) {
   // Fetch employee details using AJAX
   $.ajax({
@@ -1374,19 +1405,24 @@ function populateEditModal(employeeId) {
   });
 }
 $('#editPersonnelForm').on('submit', function (e) {
-  e.preventDefault(); // Prevent default form submission behavior
+  e.preventDefault();
+  const searchTerm = $('#searchInp').val();
 
-  // Gather form data
+  // Show or hide the "Clear Search" text based on input value
+  if (searchTerm.length > 0) {
+    $('#searchInp').val('');
+    $('#clearSearch').hide();
+  }
+
   const employeeData = {
     id: $('#editPersonnelEmployeeID').val(),
     firstName: $('#editPersonnelFirstName').val(),
     lastName: $('#editPersonnelLastName').val(),
-    jobTitle: $('#editPersonnelJobTitle').val(),
+    jobTitle: $('#editPersonnelJobTitle').val() || '', // Optional
     email: $('#editPersonnelEmailAddress').val(),
-    departmentID: $('#editPersonnelDepartment').val(),
+    departmentID: $('#editPersonnelDepartment').val(), // Send department ID
   };
 
-  // Send the data via AJAX
   $.ajax({
     url: 'libs/php/updatePersonnel.php',
     type: 'POST',
@@ -1394,38 +1430,23 @@ $('#editPersonnelForm').on('submit', function (e) {
     dataType: 'json',
     success: function (response) {
       if (response.status.code === '200') {
-        // Show success message in modal
         $('#messageContent').text(response.status.description);
         $('#messageModal').modal('show');
-
-        // Close the edit modal
         $('#editPersonnelModal').modal('hide');
-
-        // Refresh the personnel table (make sure populatePersonnelTable is defined)
         populatePersonnelTable();
       } else {
-        // Show an error message in the modal
-        $('#messageContent').text(
-          response.status.description || 'An unknown error occurred.'
-        );
+        $('#messageContent').text(response.status.description);
         $('#messageModal').modal('show');
       }
     },
-    error: function (xhr, status, error) {
-      // Handle AJAX errors
-      console.error('AJAX Error:', error);
+    error: function () {
       $('#messageContent').text(
-        'An error occurred while updating the employee details.'
+        'An error occurred while updating the employee.'
       );
       $('#messageModal').modal('show');
     },
   });
 });
-
-// Missing functionality:
-// Job title must be able to be left blank
-// Department / Location compatability must be ensured
-// Page refreshes after submission
 
 // -------------------------------------------------------------
 
@@ -1438,3 +1459,4 @@ $('#editPersonnelForm').on('submit', function (e) {
 // CHECK IF e.preventDefault needed for all
 // CHECK FOR on.click vs on.submit event triggers for forms
 // CLEAR CONSOLE OF ERRORS AND LOGS
+// No match found in 'x' if no search results
