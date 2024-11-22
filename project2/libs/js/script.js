@@ -69,7 +69,6 @@ function populatePersonnelTable() {
   });
 }
 
-// function populatePersonnelTable() {
 //   const $personnelTableBody = $('#personnelTableBody');
 //   $personnelTableBody.empty(); // Clear any existing rows
 
@@ -1669,8 +1668,99 @@ $('#editDepartmentForm').on('submit', function (e) {
       }
     },
     error: function (xhr, status, error) {
+      $('#editDepartmentModal').modal('hide');
       $('#messageContent').text(
         'An error occurred while updating the department.'
+      );
+      $('#messageModal').modal('show');
+    },
+  });
+});
+
+// Edit Locations
+
+// Triggered when the edit button is clicked
+$('#locationTableBody').on(
+  'click',
+  '.btn-primary[data-bs-target="#editLocationModal"]',
+  function () {
+    const locationID = $(this).data('id');
+
+    // Fetch the location details using an AJAX call
+    $.ajax({
+      url: 'libs/php/getLocationByID.php', // Replace with your PHP endpoint for fetching location details
+      type: 'GET',
+      data: { id: locationID }, // Send location ID as a parameter
+      dataType: 'json',
+      success: function (response) {
+        if (response.status.code === '200' && response.data.length > 0) {
+          const location = response.data[0];
+
+          // Populate the modal fields
+          $('#editLocationID').val(location.id);
+          $('#editLocationName').val(location.name);
+
+          // Show the modal
+          $('#editLocationModal').modal('show');
+        } else {
+          console.error(
+            'Failed to fetch location details:',
+            response.status.description
+          );
+        }
+      },
+      error: function (xhr, status, error) {
+        console.error('Error fetching location details:', status, error);
+      },
+    });
+  }
+);
+
+// Submit the edit location form
+
+$('#editLocationForm').on('submit', function (e) {
+  $('#editLocationModal').modal('hide');
+  e.preventDefault();
+
+  const locationData = {
+    id: $('#editLocationID').val(),
+    name: $('#editLocationName').val().trim(),
+  };
+
+  // Validation: Ensure name is provided
+  if (!locationData.name) {
+    $('#messageContent').text('Please provide a valid location name.');
+    $('#messageModal').modal('show');
+    return;
+  }
+
+  // Submit the data via AJAX
+  $.ajax({
+    url: 'libs/php/updateLocation.php',
+    type: 'POST',
+    data: locationData,
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        $('#messageContent').text(response.status.description);
+        $('#messageModal').modal('show');
+        $('#editLocationModal').modal('hide');
+        populateLocationsTable(); // Refresh the locations table
+      } else if (response.status.code === '400') {
+        // Show validation error if the location name already exists
+        $('#messageContent').text(response.status.description);
+        $('#messageModal').modal('show');
+      } else {
+        $('#messageContent').text(
+          response.status.description || 'An error occurred.'
+        );
+        $('#messageModal').modal('show');
+      }
+    },
+    error: function (xhr, status, error) {
+      $('#editLocationModal').modal('hide');
+      $('#messageContent').text(
+        'An error occurred while updating the location.'
       );
       $('#messageModal').modal('show');
     },
