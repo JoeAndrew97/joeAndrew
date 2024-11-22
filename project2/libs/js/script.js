@@ -1545,10 +1545,59 @@ $('#editPersonnelForm').on('submit', function (e) {
 
 // Edit Departments
 
-// Populate locations dropdown in the edit department modal
-function populateLocationsDropdownForDepartment(departmentID) {
+// Triggered when the edit button is clicked
+$('#departmentTableBody').on('click', '.editDepartmentBtn', function () {
+  const departmentID = $(this).data('id');
+
+  // Clear any existing data in the modal fields
+  $('#editDepartmentID').val('');
+  $('#editDepartmentName').val('');
+  $('#editDepartmentLocation').empty();
+
+  // Fetch the department details using getDepartmentByID.php
   $.ajax({
-    url: 'libs/php/getAllLocations.php',
+    url: 'libs/php/getDepartmentByID.php', // API that fetches department by ID
+    type: 'GET',
+    data: { id: departmentID }, // Send departmentID as a parameter
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200' && response.data.length > 0) {
+        const department = response.data[0];
+
+        // Populate the modal fields
+        $('#editDepartmentID').val(department.id); // Populate department ID
+        $('#editDepartmentName').val(department.name); // Populate department name
+
+        // Populate and preselect the location dropdown
+        populateLocationsDropdown(department.locationID);
+      } else {
+        console.error(
+          'Failed to fetch department details:',
+          response.status.description
+        );
+        $('#messageContent').text(
+          'Failed to fetch department details. Please try again.'
+        );
+        $('#messageModal').modal('show');
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching department details:', status, error);
+      $('#messageContent').text(
+        'An error occurred while fetching department details.'
+      );
+      $('#messageModal').modal('show');
+    },
+  });
+
+  // Show the modal
+  $('#editDepartmentModal').modal('show');
+});
+
+// Helper function to populate and preselect the location dropdown
+function populateLocationsDropdown(preselectedLocationID) {
+  $.ajax({
+    url: 'libs/php/getAllLocations.php', // API that fetches all locations
     type: 'GET',
     dataType: 'json',
     success: function (response) {
@@ -1557,13 +1606,13 @@ function populateLocationsDropdownForDepartment(departmentID) {
         $locationDropdown.empty(); // Clear existing options
 
         response.data.forEach((location) => {
-          const option = `<option value="${location.id}">${location.name}</option>`;
+          const isSelected =
+            parseInt(location.id) === parseInt(preselectedLocationID)
+              ? 'selected'
+              : '';
+          const option = `<option value="${location.id}" ${isSelected}>${location.name}</option>`;
           $locationDropdown.append(option);
         });
-
-        // Pre-select the current location for the department
-        preselectDepartmentLocation(departmentID);
-        $('#editDepartmentModal').modal('show'); // TESTING
       } else {
         console.error(
           'Failed to fetch locations:',
@@ -1576,56 +1625,31 @@ function populateLocationsDropdownForDepartment(departmentID) {
     },
   });
 }
-// Preselect the current location for the department
-function preselectDepartmentLocation(departmentID) {
-  $.ajax({
-    url: 'libs/php/getDepartmentsWithLocations.php',
-    type: 'GET',
-    dataType: 'json',
-    success: function (response) {
-      if (response.status.code === '200') {
-        const department = response.data.find(
-          (d) => d.departmentID === departmentID
-        );
-        if (department) {
-          $('#editDepartmentName').val(department.departmentName);
-          $('#editDepartmentLocation').val(department.locationID);
-        }
-      } else {
-        console.error(
-          'Failed to fetch department location:',
-          response.status.description
-        );
-      }
-    },
-    error: function (xhr, status, error) {
-      console.error('Error fetching department location:', status, error);
-    },
-  });
-}
-// Triggered when the edit button is clicked
-$('#departmentTableBody').on('click', '.editDepartmentBtn', function () {
-  const departmentID = $(this).data('id');
-  $('#editDepartmentID').val(departmentID);
-  populateLocationsDropdownForDepartment(departmentID);
-});
+
+// Submit the edit department form
 $('#editDepartmentForm').on('submit', function (e) {
   e.preventDefault();
 
   const departmentData = {
     departmentID: $('#editDepartmentID').val(),
-    name: $('#editDepartmentName').val().trim(), // Include department name
+    name: $('#editDepartmentName').val().trim(),
     locationID: $('#editDepartmentLocation').val(),
   };
 
-  // Validation: Ensure both name and locationID are provided
-  if (!departmentData.name || !departmentData.locationID) {
-    $('#messageContent').text('Please provide a valid name and location.');
+  // Validation: Ensure name and locationID are provided
+  if (
+    !departmentData.departmentID ||
+    !departmentData.name ||
+    !departmentData.locationID
+  ) {
+    $('#messageContent').text(
+      'Please provide a valid department ID, name, and location.'
+    );
     $('#messageModal').modal('show');
     return;
   }
 
-  // Submit the updated department data via AJAX
+  // Submit the data via AJAX
   $.ajax({
     url: 'libs/php/updateDepartment.php',
     type: 'POST',

@@ -36,7 +36,33 @@ if (!is_numeric($departmentID) || empty($name) || !is_numeric($locationID)) {
     exit;
 }
 
-// Update the department's name and location
+// Check if a department with the same name already exists (exclude the current department ID)
+$checkQuery = $conn->prepare('SELECT id, locationID FROM department WHERE name = ? AND id != ?');
+$checkQuery->bind_param('si', $name, $departmentID);
+$checkQuery->execute();
+$result = $checkQuery->get_result();
+
+if ($result->num_rows > 0) {
+    $existingDepartment = $result->fetch_assoc();
+
+    // If a department with the same name exists in a different location, prevent the update
+    if ($existingDepartment['locationID'] != $locationID) {
+        echo json_encode([
+            'status' => [
+                'code' => '400',
+                'name' => 'error',
+                'description' => 'A department with this name already exists in another location. Only one location is allowed per department.',
+            ],
+        ]);
+        $checkQuery->close();
+        $conn->close();
+        exit;
+    }
+}
+
+$checkQuery->close();
+
+// Proceed to update the department's name and location if no conflict is found
 $updateQuery = $conn->prepare('UPDATE department SET name = ?, locationID = ? WHERE id = ?');
 $updateQuery->bind_param('sii', $name, $locationID, $departmentID);
 
@@ -61,4 +87,3 @@ if ($updateQuery->execute()) {
 $updateQuery->close();
 $conn->close();
 ?>
-
