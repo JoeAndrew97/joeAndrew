@@ -23,7 +23,7 @@ function populatePersonnelTable() {
                 person.lastName || 'N/A'
               }, ${person.firstName || 'N/A'}</td>
               <td class="align-middle text-nowrap d-md-table-cell">${
-                person.jobTitle || '' // Include jobTitle here
+                person.jobTitle || ''
               }</td>
               <td class="align-middle text-nowrap d-md-table-cell">${
                 person.department || 'N/A'
@@ -35,9 +35,9 @@ function populatePersonnelTable() {
                 person.email || 'N/A'
               }</td>
               <td class="text-end text-nowrap">
-                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonnelModal" data-id="${
-                    person.id || ''
-                  }">
+                  <button type="button" class="btn btn-primary btn-sm edit-btn" 
+                          data-bs-toggle="modal" data-bs-target="#editPersonnelModal" 
+                          data-id="${person.id || ''}">
                       <i class="fa-solid fa-pencil fa-fw"></i>
                   </button>
                   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
@@ -49,6 +49,12 @@ function populatePersonnelTable() {
             </tr>
           `;
           $personnelTableBody.append(rowHtml);
+        });
+
+        // Attach click event to all edit buttons
+        $('.edit-btn').on('click', function () {
+          const employeeId = $(this).data('id');
+          populateEditModal(employeeId);
         });
       } else {
         console.error(
@@ -62,6 +68,65 @@ function populatePersonnelTable() {
     },
   });
 }
+
+// function populatePersonnelTable() {
+//   const $personnelTableBody = $('#personnelTableBody');
+//   $personnelTableBody.empty(); // Clear any existing rows
+
+//   // Fetch the latest data from the server
+//   $.ajax({
+//     url: 'libs/php/getAll.php',
+//     method: 'GET',
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === '200') {
+//         // Populate the table with the fetched data
+//         response.data.forEach((person) => {
+//           const rowHtml = `
+//             <tr>
+//               <td class="align-middle text-nowrap">${
+//                 person.lastName || 'N/A'
+//               }, ${person.firstName || 'N/A'}</td>
+//               <td class="align-middle text-nowrap d-md-table-cell">${
+//                 person.jobTitle || '' // Include jobTitle here
+//               }</td>
+//               <td class="align-middle text-nowrap d-md-table-cell">${
+//                 person.department || 'N/A'
+//               }</td>
+//               <td class="align-middle text-nowrap d-md-table-cell">${
+//                 person.location || 'N/A'
+//               }</td>
+//               <td class="align-middle text-nowrap d-md-table-cell">${
+//                 person.email || 'N/A'
+//               }</td>
+//               <td class="text-end text-nowrap">
+//                   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonnelModal" data-id="${
+//                     person.id || ''
+//                   }">
+//                       <i class="fa-solid fa-pencil fa-fw"></i>
+//                   </button>
+//                   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
+//                     person.id || ''
+//                   }">
+//                       <i class="fa-solid fa-trash fa-fw"></i>
+//                   </button>
+//               </td>
+//             </tr>
+//           `;
+//           $personnelTableBody.append(rowHtml);
+//         });
+//       } else {
+//         console.error(
+//           'Failed to fetch personnel data:',
+//           response.status.description
+//         );
+//       }
+//     },
+//     error: function (xhr, status, error) {
+//       console.error('Error fetching personnel data:', status, error);
+//     },
+//   });
+// }
 // AJAX request to getDepartmentsWithLocations.php
 function populateDepartmentsTable() {
   const $departmentsTableBody = $('#departmentTableBody');
@@ -816,7 +881,7 @@ $('#applyFilter').click(function () {
   }
 });
 
-// ----------------- Add Button Functionality  ----------------
+// -----------------  Add Button Functionality  ----------------
 
 // Used for formatting names before submission to DB
 function capitaliseFirstLetter(string) {
@@ -849,7 +914,6 @@ $('#addBtn').click(function () {
     console.log('Add functionality not implemented for this tab.');
   }
 });
-
 // Function to populate the Department and Location dropdowns
 function populateAddPersonnelDropdowns(callback) {
   let ajaxCallsRemaining = 2; // Track both dropdowns
@@ -921,7 +985,6 @@ function populateAddPersonnelDropdowns(callback) {
     },
   });
 }
-
 function populateAddDepartmentDropdowns() {
   // Populate Location Dropdown
   $.ajax({
@@ -945,7 +1008,6 @@ function populateAddDepartmentDropdowns() {
     },
   });
 }
-
 // When new personnel details have been added, sends data to insertPersonnel.php script to add personnel to DB
 $('#savePersonnelBtn').click(function () {
   // Get and trim the inputs
@@ -1046,7 +1108,6 @@ $('#savePersonnelBtn').click(function () {
     },
   });
 });
-
 $('#saveDepartmentBtn').click(function () {
   const departmentName = $('#addDepartmentName').val().trim();
   const locationID = $('#addDepartmentLocation').val();
@@ -1137,12 +1198,10 @@ $('#saveDepartmentBtn').click(function () {
     },
   });
 });
-
 // Function to capitalize the first letter of each word
 function capitaliseFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
-
 // Handle the "Save" button click for adding a location
 $('#saveLocationBtn').click(function () {
   const locationName = $('#addLocationName').val().trim();
@@ -1210,137 +1269,172 @@ $('#saveLocationBtn').click(function () {
     },
   });
 });
+// Refresh the Locations Table - DUPLICATE
+// function populateLocationsTable() {
+//   const $locationTableBody = $('#locationTableBody');
+//   $locationTableBody.empty(); // Clear any existing rows
 
-// Refresh the Locations Table
-function populateLocationsTable() {
-  const $locationTableBody = $('#locationTableBody');
-  $locationTableBody.empty(); // Clear any existing rows
+//   // Fetch the latest location data from the server
+//   $.ajax({
+//     url: 'libs/php/getAllLocations.php', // Endpoint to fetch location data
+//     method: 'GET',
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === '200') {
+//         // Populate the table with the fetched data
+//         response.data.forEach((location) => {
+//           const rowHtml = `
+//             <tr>
+//               <td class="align-middle text-nowrap">${
+//                 location.name || 'Unknown'
+//               }</td>
+//               <td class="align-middle text-end text-nowrap">
+//                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editLocationModal" data-id="${
+//                   location.id
+//                 }">
+//                   <i class="fa-solid fa-pencil fa-fw"></i>
+//                 </button>
+//                 <button type="button" class="btn btn-primary btn-sm deleteLocationBtn" data-id="${
+//                   location.id
+//                 }">
+//                   <i class="fa-solid fa-trash fa-fw"></i>
+//                 </button>
+//               </td>
+//             </tr>
+//           `;
+//           $locationTableBody.append(rowHtml);
+//         });
+//       } else {
+//         console.error(
+//           'Failed to fetch locations:',
+//           response.status.description
+//         );
+//       }
+//     },
+//     error: function (xhr, status, error) {
+//       console.error('Error fetching locations:', status, error);
+//     },
+//   });
+// }
 
-  // Fetch the latest location data from the server
+// -----------------  Refresh Functions  ---------------------
+
+// Refresh corresponding tab when clicked:
+$('#personnelBtn').click(function () {
+  populatePersonnelTable();
+});
+$('#departmentsBtn').click(function () {
+  populateDepartmentsTable();
+});
+$('#locationsBtn').click(function () {
+  populateLocationsTable();
+});
+
+// -----------------  Edit Functionality  ---------------------
+
+function populateEditModal(employeeId) {
+  // Fetch employee details using AJAX
   $.ajax({
-    url: 'libs/php/getAllLocations.php', // Endpoint to fetch location data
+    url: 'libs/php/getPersonnelByID.php',
     method: 'GET',
+    data: { id: employeeId },
     dataType: 'json',
     success: function (response) {
       if (response.status.code === '200') {
-        // Populate the table with the fetched data
-        response.data.forEach((location) => {
-          const rowHtml = `
-            <tr>
-              <td class="align-middle text-nowrap">${
-                location.name || 'Unknown'
-              }</td>
-              <td class="align-middle text-end text-nowrap">
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editLocationModal" data-id="${
-                  location.id
-                }">
-                  <i class="fa-solid fa-pencil fa-fw"></i>
-                </button>
-                <button type="button" class="btn btn-primary btn-sm deleteLocationBtn" data-id="${
-                  location.id
-                }">
-                  <i class="fa-solid fa-trash fa-fw"></i>
-                </button>
-              </td>
-            </tr>
-          `;
-          $locationTableBody.append(rowHtml);
+        const employee = response.data.personnel[0];
+        const departments = response.data.department;
+
+        // Populate the modal fields
+        $('#editPersonnelEmployeeID').val(employee.id);
+        $('#editPersonnelFirstName').val(employee.firstName);
+        $('#editPersonnelLastName').val(employee.lastName);
+        $('#editPersonnelJobTitle').val(employee.jobTitle);
+        $('#editPersonnelEmailAddress').val(employee.email);
+
+        // Populate department dropdown
+        const $departmentSelect = $('#editPersonnelDepartment');
+        $departmentSelect.empty(); // Clear existing options
+        departments.forEach((department) => {
+          const isSelected =
+            department.id === employee.departmentID ? 'selected' : '';
+          $departmentSelect.append(
+            `<option value="${department.id}" ${isSelected}>${department.name}</option>`
+          );
         });
       } else {
         console.error(
-          'Failed to fetch locations:',
+          'Failed to fetch employee details:',
           response.status.description
         );
       }
     },
     error: function (xhr, status, error) {
-      console.error('Error fetching locations:', status, error);
+      console.error('Error fetching employee details:', status, error);
     },
   });
 }
-
-// -----------------------------------------------------------------------------------------
-
-$('#personnelBtn').click(function () {
-  // Call function to refresh personnel table
-});
-
-// INCOMPLETE - Refreshes table when departmets tab button is clicked
-$('#departmentsBtn').click(function () {
-  // Call function to refresh department table
-});
-
-// INCOMPLETE - Refreshes table when locations tab button is clicked
-$('#locationsBtn').click(function () {
-  // Call function to refresh location table
-});
-
-// INCOMPLETE? - Opens edit personnel modal
-// $('#editPersonnelModal').on('show.bs.modal', function (e) {
-//   $.ajax({
-//     url: 'https://coding.itcareerswitch.co.uk/companydirectory/libs/php/getPersonnelByID.php',
-//     type: 'POST',
-//     dataType: 'json',
-//     data: {
-//       // Retrieve the data-id attribute from the calling button
-//       // see https://getbootstrap.com/docs/5.0/components/modal/#varying-modal-content
-//       // for the non-jQuery JavaScript alternative
-//       id: $(e.relatedTarget).attr('data-id'),
-//     },
-//     success: function (result) {
-//       var resultCode = result.status.code;
-
-//       if (resultCode == 200) {
-//         // Update the hidden input with the employee id so that
-//         // it can be referenced when the form is submitted
-
-//         $('#editPersonnelEmployeeID').val(result.data.personnel[0].id);
-
-//         $('#editPersonnelFirstName').val(result.data.personnel[0].firstName);
-//         $('#editPersonnelLastName').val(result.data.personnel[0].lastName);
-//         $('#editPersonnelJobTitle').val(result.data.personnel[0].jobTitle);
-//         $('#editPersonnelEmailAddress').val(result.data.personnel[0].email);
-
-//         $('#editPersonnelDepartment').html('');
-
-//         $.each(result.data.department, function () {
-//           $('#editPersonnelDepartment').append(
-//             $('<option>', {
-//               value: this.id,
-//               text: this.name,
-//             })
-//           );
-//         });
-
-//         $('#editPersonnelDepartment').val(
-//           result.data.personnel[0].departmentID
-//         );
-//       } else {
-//         $('#editPersonnelModal .modal-title').replaceWith(
-//           'Error retrieving data'
-//         );
-//       }
-//     },
-//     error: function (jqXHR, textStatus, errorThrown) {
-//       $('#editPersonnelModal .modal-title').replaceWith(
-//         'Error retrieving data'
-//       );
-//     },
-//   });
-// });
-
-// Executes when the form button with type="submit" is clicked
 $('#editPersonnelForm').on('submit', function (e) {
-  // Executes when the form button with type="submit" is clicked
-  // stop the default browser behviour
+  e.preventDefault(); // Prevent default form submission behavior
 
-  e.preventDefault();
+  // Gather form data
+  const employeeData = {
+    id: $('#editPersonnelEmployeeID').val(),
+    firstName: $('#editPersonnelFirstName').val(),
+    lastName: $('#editPersonnelLastName').val(),
+    jobTitle: $('#editPersonnelJobTitle').val(),
+    email: $('#editPersonnelEmailAddress').val(),
+    departmentID: $('#editPersonnelDepartment').val(),
+  };
 
-  // AJAX call to save form data
+  // Send the data via AJAX
+  $.ajax({
+    url: 'libs/php/updatePersonnel.php',
+    type: 'POST',
+    data: employeeData,
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Show success message in modal
+        $('#messageContent').text(response.status.description);
+        $('#messageModal').modal('show');
+
+        // Close the edit modal
+        $('#editPersonnelModal').modal('hide');
+
+        // Refresh the personnel table (make sure populatePersonnelTable is defined)
+        populatePersonnelTable();
+      } else {
+        // Show an error message in the modal
+        $('#messageContent').text(
+          response.status.description || 'An unknown error occurred.'
+        );
+        $('#messageModal').modal('show');
+      }
+    },
+    error: function (xhr, status, error) {
+      // Handle AJAX errors
+      console.error('AJAX Error:', error);
+      $('#messageContent').text(
+        'An error occurred while updating the employee details.'
+      );
+      $('#messageModal').modal('show');
+    },
+  });
 });
+
+// Missing functionality:
+// Job title must be able to be left blank
+// Department / Location compatability must be ensured
+// Page refreshes after submission
+
+// -------------------------------------------------------------
 
 // Even if search was not event driven, conflicts could occur - need handling for if user clicks on result that is no longer there
 // test multiple user functionality with multiple browser sesstions
 
 // ADD PRELOADER
 // HANDLE IF USER PRESSES ENTER WHEN A MODAL IS OPEN
+// CHECK PREPARED STATEMENTS
+// CHECK IF e.preventDefault needed for all
+// CHECK FOR on.click vs on.submit event triggers for forms
+// CLEAR CONSOLE OF ERRORS AND LOGS
