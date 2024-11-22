@@ -150,19 +150,26 @@ function populateDepartmentsTable() {
                 department.locationName || 'Unknown'
               }</td>
               <td class="align-middle text-end text-nowrap">
-                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editDepartmentModal" data-id="${
-                  department.departmentID
-                }">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm editDepartmentBtn"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editDepartmentModal"
+                  data-id="${department.departmentID}"
+                >
                   <i class="fa-solid fa-pencil fa-fw"></i>
                 </button>
-                <button type="button" class="btn btn-primary btn-sm deleteDepartmentBtn" data-id="${
-                  department.departmentID
-                }">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm deleteDepartmentBtn"
+                  data-id="${department.departmentID}"
+                >
                   <i class="fa-solid fa-trash fa-fw"></i>
                 </button>
               </td>
             </tr>
           `;
+
           $departmentsTableBody.append(rowHtml);
         });
       } else {
@@ -1108,20 +1115,13 @@ $('#savePersonnelBtn').click(function () {
     },
   });
 });
+
 $('#saveDepartmentBtn').click(function () {
   const departmentName = $('#addDepartmentName').val().trim();
   const locationID = $('#addDepartmentLocation').val();
 
   // Close the modal immediately
   $('#addDepartmentModal').modal('hide');
-
-  // Check if the user is authorized
-  if (!isAuth) {
-    $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('You are not authorized to add new departments.');
-    $('#messageModal').modal('show');
-    return;
-  }
 
   // Check if all fields are filled
   if (!departmentName || !locationID) {
@@ -1136,7 +1136,7 @@ $('#saveDepartmentBtn').click(function () {
 
   // Validate department name and location association before proceeding
   $.ajax({
-    url: 'libs/php/validateDepartmentLocation.php',
+    url: 'libs/php/validateDepartmentLocationByName.php',
     method: 'POST',
     data: {
       name: formattedDepartmentName, // Check against department name
@@ -1145,7 +1145,7 @@ $('#saveDepartmentBtn').click(function () {
     dataType: 'json',
     success: function (response) {
       if (response.status.code === '400') {
-        // Show validation error if the department-location association is invalid
+        // Show validation error if a duplicate department exists
         $('#messageModal .modal-title').text('Error');
         $('#messageContent').text(response.status.description);
         $('#messageModal').modal('show');
@@ -1157,8 +1157,8 @@ $('#saveDepartmentBtn').click(function () {
         url: 'libs/php/insertDepartment.php',
         method: 'POST',
         data: {
-          name: formattedDepartmentName, // 'name' matches the PHP script
-          locationID: locationID, // 'locationID' matches the PHP script
+          name: formattedDepartmentName,
+          locationID: locationID,
         },
         dataType: 'json',
         success: function (response) {
@@ -1198,7 +1198,99 @@ $('#saveDepartmentBtn').click(function () {
     },
   });
 });
+
+// $('#saveDepartmentBtn').click(function () {
+//   const departmentName = $('#addDepartmentName').val().trim();
+//   const locationID = $('#addDepartmentLocation').val();
+
+//   // Close the modal immediately
+//   $('#addDepartmentModal').modal('hide');
+
+//   // Check if the user is authorized
+//   if (!isAuth) {
+//     $('#messageModal .modal-title').text('Error');
+//     $('#messageContent').text('You are not authorized to add new departments.');
+//     $('#messageModal').modal('show');
+//     return;
+//   }
+
+//   // Check if all fields are filled
+//   if (!departmentName || !locationID) {
+//     $('#messageModal .modal-title').text('Error');
+//     $('#messageContent').text('Please fill out all required fields.');
+//     $('#messageModal').modal('show');
+//     return;
+//   }
+
+//   // Capitalize department name
+//   const formattedDepartmentName = capitaliseFirstLetter(departmentName);
+
+//   // Validate department name and location association before proceeding
+//   $.ajax({
+//     url: 'libs/php/validateDepartmentLocationByName.php',
+//     method: 'POST',
+//     data: {
+//       name: formattedDepartmentName, // Check against department name
+//       locationID: locationID, // Use locationID
+//     },
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === '400') {
+//         // Show validation error if the department-location association is invalid
+//         $('#messageModal .modal-title').text('Error');
+//         $('#messageContent').text(response.status.description);
+//         $('#messageModal').modal('show');
+//         return;
+//       }
+
+//       // If validation passes, proceed to insert the new department
+//       $.ajax({
+//         url: 'libs/php/insertDepartment.php',
+//         method: 'POST',
+//         data: {
+//           name: formattedDepartmentName, // 'name' matches the PHP script
+//           locationID: locationID, // 'locationID' matches the PHP script
+//         },
+//         dataType: 'json',
+//         success: function (response) {
+//           if (response.status.code === '200') {
+//             // Refresh the Departments Table
+//             populateDepartmentsTable();
+
+//             // Show success message
+//             $('#messageModal .modal-title').text('Success');
+//             $('#messageContent').text('Department added successfully!');
+//             $('#messageModal').modal('show');
+//           } else {
+//             $('#messageModal .modal-title').text('Error');
+//             $('#messageContent').text(
+//               'Failed to add department. Please try again.'
+//             );
+//             $('#messageModal').modal('show');
+//           }
+//         },
+//         error: function (xhr, status, error) {
+//           console.error('Error during add request:', status, error);
+//           $('#messageModal .modal-title').text('Error');
+//           $('#messageContent').text(
+//             'An error occurred while adding the department. Please try again.'
+//           );
+//           $('#messageModal').modal('show');
+//         },
+//       });
+//     },
+//     error: function (xhr, status, error) {
+//       console.error('Error validating department and location:', status, error);
+//       $('#messageModal .modal-title').text('Error');
+//       $('#messageContent').text(
+//         'Failed to validate department and location. Please try again.'
+//       );
+//       $('#messageModal').modal('show');
+//     },
+//   });
+// });
 // Function to capitalize the first letter of each word
+
 function capitaliseFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
@@ -1332,6 +1424,8 @@ $('#locationsBtn').click(function () {
 
 // -----------------  Edit Functionality  ---------------------
 
+// Edit Personnel
+
 function populateLocationsDropdown() {
   // Fetch locations via AJAX
   $.ajax({
@@ -1359,7 +1453,6 @@ function populateLocationsDropdown() {
     },
   });
 }
-// Call this function when the edit modal is opened
 $('#editPersonnelModal').on('show.bs.modal', function () {
   populateLocationsDropdown();
 });
@@ -1435,13 +1528,125 @@ $('#editPersonnelForm').on('submit', function (e) {
         $('#editPersonnelModal').modal('hide');
         populatePersonnelTable();
       } else {
+        $('#editPersonnelModal').modal('hide');
         $('#messageContent').text(response.status.description);
         $('#messageModal').modal('show');
       }
     },
     error: function () {
+      $('#editPersonnelModal').modal('hide');
       $('#messageContent').text(
         'An error occurred while updating the employee.'
+      );
+      $('#messageModal').modal('show');
+    },
+  });
+});
+
+// Edit Departments
+
+// Populate locations dropdown in the edit department modal
+function populateLocationsDropdownForDepartment(departmentID) {
+  $.ajax({
+    url: 'libs/php/getAllLocations.php',
+    type: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        const $locationDropdown = $('#editDepartmentLocation');
+        $locationDropdown.empty(); // Clear existing options
+
+        response.data.forEach((location) => {
+          const option = `<option value="${location.id}">${location.name}</option>`;
+          $locationDropdown.append(option);
+        });
+
+        // Pre-select the current location for the department
+        preselectDepartmentLocation(departmentID);
+        $('#editDepartmentModal').modal('show'); // TESTING
+      } else {
+        console.error(
+          'Failed to fetch locations:',
+          response.status.description
+        );
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching locations:', status, error);
+    },
+  });
+}
+// Preselect the current location for the department
+function preselectDepartmentLocation(departmentID) {
+  $.ajax({
+    url: 'libs/php/getDepartmentsWithLocations.php',
+    type: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        const department = response.data.find(
+          (d) => d.departmentID === departmentID
+        );
+        if (department) {
+          $('#editDepartmentName').val(department.departmentName);
+          $('#editDepartmentLocation').val(department.locationID);
+        }
+      } else {
+        console.error(
+          'Failed to fetch department location:',
+          response.status.description
+        );
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching department location:', status, error);
+    },
+  });
+}
+// Triggered when the edit button is clicked
+$('#departmentTableBody').on('click', '.editDepartmentBtn', function () {
+  const departmentID = $(this).data('id');
+  $('#editDepartmentID').val(departmentID);
+  populateLocationsDropdownForDepartment(departmentID);
+});
+$('#editDepartmentForm').on('submit', function (e) {
+  e.preventDefault();
+
+  const departmentData = {
+    departmentID: $('#editDepartmentID').val(),
+    name: $('#editDepartmentName').val().trim(), // Include department name
+    locationID: $('#editDepartmentLocation').val(),
+  };
+
+  // Validation: Ensure both name and locationID are provided
+  if (!departmentData.name || !departmentData.locationID) {
+    $('#messageContent').text('Please provide a valid name and location.');
+    $('#messageModal').modal('show');
+    return;
+  }
+
+  // Submit the updated department data via AJAX
+  $.ajax({
+    url: 'libs/php/updateDepartment.php',
+    type: 'POST',
+    data: departmentData,
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        $('#messageContent').text(response.status.description);
+        $('#messageModal').modal('show');
+        $('#editDepartmentModal').modal('hide');
+        populateDepartmentsTable(); // Refresh the departments table
+      } else {
+        $('#messageContent').text(
+          response.status.description || 'An error occurred.'
+        );
+        $('#messageModal').modal('show');
+      }
+    },
+    error: function (xhr, status, error) {
+      $('#messageContent').text(
+        'An error occurred while updating the department.'
       );
       $('#messageModal').modal('show');
     },
@@ -1460,3 +1665,4 @@ $('#editPersonnelForm').on('submit', function (e) {
 // CHECK FOR on.click vs on.submit event triggers for forms
 // CLEAR CONSOLE OF ERRORS AND LOGS
 // No match found in 'x' if no search results
+// CHECK PREPARED STATEMENTS ARE USED
