@@ -35,16 +35,16 @@ function populatePersonnelTable() {
                 person.email || 'N/A'
               }</td>
               <td class="text-end text-nowrap">
-                  <button type="button" class="btn btn-primary btn-sm edit-btn" 
-                          data-bs-toggle="modal" data-bs-target="#editPersonnelModal" 
-                          data-id="${person.id || ''}">
-                      <i class="fa-solid fa-pencil fa-fw"></i>
-                  </button>
-                  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
-                    person.id || ''
-                  }">
-                      <i class="fa-solid fa-trash fa-fw"></i>
-                  </button>
+                <button type="button" class="btn btn-primary btn-sm edit-btn" 
+                        data-bs-toggle="modal" data-bs-target="#editPersonnelModal" 
+                        data-id="${person.id || ''}">
+                    <i class="fa-solid fa-pencil fa-fw"></i>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm deletePersonnelBtn" data-id="${
+                  person.id || ''
+                }">
+                    <i class="fa-solid fa-trash fa-fw"></i>
+                </button>
               </td>
             </tr>
           `;
@@ -68,6 +68,70 @@ function populatePersonnelTable() {
     },
   });
 }
+// function populatePersonnelTable() {
+//   const $personnelTableBody = $('#personnelTableBody');
+//   $personnelTableBody.empty(); // Clear any existing rows
+
+//   // Fetch the latest data from the server
+//   $.ajax({
+//     url: 'libs/php/getAll.php',
+//     method: 'GET',
+//     dataType: 'json',
+//     success: function (response) {
+//       if (response.status.code === '200') {
+//         // Populate the table with the fetched data
+//         response.data.forEach((person) => {
+//           const rowHtml = `
+//             <tr>
+//               <td class="align-middle text-nowrap">${
+//                 person.lastName || 'N/A'
+//               }, ${person.firstName || 'N/A'}</td>
+//               <td class="align-middle text-nowrap d-md-table-cell">${
+//                 person.jobTitle || ''
+//               }</td>
+//               <td class="align-middle text-nowrap d-md-table-cell">${
+//                 person.department || 'N/A'
+//               }</td>
+//               <td class="align-middle text-nowrap d-md-table-cell">${
+//                 person.location || 'N/A'
+//               }</td>
+//               <td class="align-middle text-nowrap d-md-table-cell">${
+//                 person.email || 'N/A'
+//               }</td>
+//               <td class="text-end text-nowrap">
+//                   <button type="button" class="btn btn-primary btn-sm edit-btn"
+//                           data-bs-toggle="modal" data-bs-target="#editPersonnelModal"
+//                           data-id="${person.id || ''}">
+//                       <i class="fa-solid fa-pencil fa-fw"></i>
+//                   </button>
+//                   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
+//                     person.id || ''
+//                   }">
+//                       <i class="fa-solid fa-trash fa-fw"></i>
+//                   </button>
+//               </td>
+//             </tr>
+//           `;
+//           $personnelTableBody.append(rowHtml);
+//         });
+
+//         // Attach click event to all edit buttons
+//         $('.edit-btn').on('click', function () {
+//           const employeeId = $(this).data('id');
+//           populateEditModal(employeeId);
+//         });
+//       } else {
+//         console.error(
+//           'Failed to fetch personnel data:',
+//           response.status.description
+//         );
+//       }
+//     },
+//     error: function (xhr, status, error) {
+//       console.error('Error fetching personnel data:', status, error);
+//     },
+//   });
+// }
 // AJAX request to getDepartmentsWithLocations.php
 function populateDepartmentsTable() {
   const $departmentsTableBody = $('#departmentTableBody');
@@ -1884,6 +1948,76 @@ function confirmDeleteDepartment(departmentID) {
 
 // Delete Personnel
 
+// Global variable to store the ID of the item to delete
+let itemToDelete = null;
+
+// Event listener for delete buttons
+$('#personnelTableBody').on('click', '.deletePersonnelBtn', function () {
+  const personnelID = $(this).data('id');
+  itemToDelete = personnelID;
+
+  // Update the modal text dynamically
+  $('#confirmDeleteModal .modal-body p').text(
+    'Are you sure you want to delete this personnel record?'
+  );
+
+  // Show the confirmation modal
+  $('#confirmDeleteModal').modal('show');
+});
+
+// Handle confirmation of deletion
+$('#confirmDeleteBtn')
+  .off('click')
+  .on('click', function () {
+    if (!itemToDelete) return; // Ensure there's an ID to delete
+
+    // Send delete request
+    $.ajax({
+      url: 'libs/php/deletePersonnel.php', // Update with your delete API
+      type: 'POST',
+      data: { id: itemToDelete },
+      dataType: 'json',
+      success: function (response) {
+        if (response.status.code === '200') {
+          // Successfully deleted
+          $('#confirmDeleteModal').modal('hide'); // Close the modal
+          $('#messageModal .modal-title').text('Success');
+          $('#messageContent').text('Personnel record deleted successfully.');
+          $('#messageModal').modal('show');
+
+          // Refresh the table
+          populatePersonnelTable();
+        } else if (response.status.code === '400') {
+          // Dependency error
+          $('#confirmDeleteModal').modal('hide'); // Close the confirmation modal
+          $('#messageModal .modal-title').text('Error');
+          $('#messageContent').text(
+            response.status.description ||
+              'This personnel record cannot be deleted due to dependencies.'
+          );
+          $('#messageModal').modal('show');
+        } else {
+          // Other errors
+          $('#confirmDeleteModal').modal('hide');
+          $('#messageModal .modal-title').text('Error');
+          $('#messageContent').text(
+            response.status.description || 'Failed to delete personnel record.'
+          );
+          $('#messageModal').modal('show');
+        }
+      },
+      error: function (xhr, status, error) {
+        $('#confirmDeleteModal').modal('hide'); // Close the confirmation modal
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(
+          'An error occurred while deleting the personnel record.'
+        );
+        $('#messageModal').modal('show');
+        console.error('Error:', status, error);
+      },
+    });
+  });
+
 // -------------------------------------------------------------
 
 // Even if search was not event driven, conflicts could occur - need handling for if user clicks on result that is no longer there
@@ -1899,3 +2033,5 @@ function confirmDeleteDepartment(departmentID) {
 // CHECK PREPARED STATEMENTS ARE USED
 // ARE ALL MODAL STYLINGS THE SAME?
 // CHECK ID'S NOT STORED IN MULTI-USER COMPATIBLE WAY
+// CLEAR SEARCH BARS AND ENSURE TABLE REFRESHED AFTER SUCCESSFUL DELETION
+// OK BUTTON NOT WORKING ON MODALS

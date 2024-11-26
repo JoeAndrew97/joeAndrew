@@ -1,5 +1,5 @@
 <?php
-// Enable error reporting for development
+// Enable error reporting for development (remove in production)
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
@@ -20,6 +20,7 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
+// Validate inputs
 $personnelID = $_POST['id'] ?? null;
 
 if (!is_numeric($personnelID)) {
@@ -34,10 +35,10 @@ if (!is_numeric($personnelID)) {
 }
 
 // Proceed with deletion
-$deleteQuery = $conn->prepare('DELETE FROM personnel WHERE id = ?');
-$deleteQuery->bind_param('i', $personnelID);
+$query = $conn->prepare('DELETE FROM personnel WHERE id = ?');
+$query->bind_param('i', $personnelID);
 
-if ($deleteQuery->execute()) {
+if ($query->execute()) {
     echo json_encode([
         'status' => [
             'code' => '200',
@@ -49,12 +50,14 @@ if ($deleteQuery->execute()) {
     echo json_encode([
         'status' => [
             'code' => '500',
-            'name' => 'failure',
-            'description' => 'Failed to delete personnel: ' . $deleteQuery->error,
+            'name' => 'error',
+            'description' => 'Failed to delete personnel: ' . $query->error,
         ],
     ]);
 }
 
-$deleteQuery->close();
+$query->close();
 $conn->close();
 ?>
+
+
