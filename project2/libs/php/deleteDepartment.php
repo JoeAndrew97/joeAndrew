@@ -1,5 +1,5 @@
 <?php
-// Enable error reporting for development
+// Enable error reporting for development (remove in production)
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
@@ -20,6 +20,7 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
+// Validate inputs
 $departmentID = $_POST['id'] ?? null;
 
 if (!is_numeric($departmentID)) {
@@ -33,26 +34,27 @@ if (!is_numeric($departmentID)) {
     exit;
 }
 
-// Check for dependent personnel
-$checkQuery = $conn->prepare('SELECT id FROM personnel WHERE departmentID = ?');
-$checkQuery->bind_param('i', $departmentID);
-$checkQuery->execute();
-$checkResult = $checkQuery->get_result();
+// Check for associated personnel
+$query = $conn->prepare('SELECT COUNT(*) as count FROM personnel WHERE departmentID = ?');
+$query->bind_param('i', $departmentID);
+$query->execute();
+$result = $query->get_result();
+$row = $result->fetch_assoc();
 
-if ($checkResult->num_rows > 0) {
+if ($row['count'] > 0) {
     echo json_encode([
         'status' => [
             'code' => '400',
             'name' => 'error',
-            'description' => 'Department cannot be deleted because it has associated personnel.',
+            'description' => 'This department cannot be deleted because it has associated personnel.',
         ],
     ]);
-    $checkQuery->close();
+    $query->close();
     $conn->close();
     exit;
 }
 
-// Proceed with deletion
+// Proceed with deletion if no dependencies
 $deleteQuery = $conn->prepare('DELETE FROM department WHERE id = ?');
 $deleteQuery->bind_param('i', $departmentID);
 
@@ -68,13 +70,13 @@ if ($deleteQuery->execute()) {
     echo json_encode([
         'status' => [
             'code' => '500',
-            'name' => 'failure',
-            'description' => 'Failed to delete department: ' . $deleteQuery->error,
+            'name' => 'error',
+            'description' => 'Failed to delete the department.',
         ],
     ]);
 }
 
-$checkQuery->close();
+$query->close();
 $deleteQuery->close();
 $conn->close();
 ?>

@@ -68,64 +68,6 @@ function populatePersonnelTable() {
     },
   });
 }
-
-//   const $personnelTableBody = $('#personnelTableBody');
-//   $personnelTableBody.empty(); // Clear any existing rows
-
-//   // Fetch the latest data from the server
-//   $.ajax({
-//     url: 'libs/php/getAll.php',
-//     method: 'GET',
-//     dataType: 'json',
-//     success: function (response) {
-//       if (response.status.code === '200') {
-//         // Populate the table with the fetched data
-//         response.data.forEach((person) => {
-//           const rowHtml = `
-//             <tr>
-//               <td class="align-middle text-nowrap">${
-//                 person.lastName || 'N/A'
-//               }, ${person.firstName || 'N/A'}</td>
-//               <td class="align-middle text-nowrap d-md-table-cell">${
-//                 person.jobTitle || '' // Include jobTitle here
-//               }</td>
-//               <td class="align-middle text-nowrap d-md-table-cell">${
-//                 person.department || 'N/A'
-//               }</td>
-//               <td class="align-middle text-nowrap d-md-table-cell">${
-//                 person.location || 'N/A'
-//               }</td>
-//               <td class="align-middle text-nowrap d-md-table-cell">${
-//                 person.email || 'N/A'
-//               }</td>
-//               <td class="text-end text-nowrap">
-//                   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPersonnelModal" data-id="${
-//                     person.id || ''
-//                   }">
-//                       <i class="fa-solid fa-pencil fa-fw"></i>
-//                   </button>
-//                   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
-//                     person.id || ''
-//                   }">
-//                       <i class="fa-solid fa-trash fa-fw"></i>
-//                   </button>
-//               </td>
-//             </tr>
-//           `;
-//           $personnelTableBody.append(rowHtml);
-//         });
-//       } else {
-//         console.error(
-//           'Failed to fetch personnel data:',
-//           response.status.description
-//         );
-//       }
-//     },
-//     error: function (xhr, status, error) {
-//       console.error('Error fetching personnel data:', status, error);
-//     },
-//   });
-// }
 // AJAX request to getDepartmentsWithLocations.php
 function populateDepartmentsTable() {
   const $departmentsTableBody = $('#departmentTableBody');
@@ -1861,6 +1803,87 @@ function confirmDeleteLocation() {
 
 // Delete Department
 
+// Attach click event for delete buttons
+$('#departmentTableBody').on('click', '.deleteDepartmentBtn', function () {
+  const departmentID = $(this).data('id');
+
+  // Show confirmation modal
+  $('#messageModal .modal-title').text('Confirm Deletion');
+  $('#messageContent').text('Are you sure you want to delete this department?');
+  $('#messageModalOkButton')
+    .text('Delete')
+    .off('click')
+    .on('click', function () {
+      confirmDeleteDepartment(departmentID);
+    });
+
+  $('#messageModal').modal('show');
+});
+// Confirm and delete the department
+function confirmDeleteDepartment(departmentID) {
+  $.ajax({
+    url: 'libs/php/deleteDepartment.php',
+    type: 'POST',
+    data: { id: departmentID },
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Show success message
+        $('#messageModal .modal-title').text('Success');
+        $('#messageContent').text('Department deleted successfully.');
+        $('#messageModalOkButton')
+          .text('OK')
+          .off('click')
+          .on('click', function () {
+            $('#messageModal').modal('hide');
+          });
+        populateDepartmentsTable(); // Refresh the table
+      } else if (response.status.code === '400') {
+        // Show error message for dependencies
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(
+          response.status.description ||
+            'This department cannot be deleted because it has associated personnel.'
+        );
+        $('#messageModalOkButton')
+          .text('OK')
+          .off('click')
+          .on('click', function () {
+            $('#messageModal').modal('hide');
+          });
+      } else {
+        // Show generic error message
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(
+          response.status.description ||
+            'An error occurred while deleting the department.'
+        );
+        $('#messageModalOkButton')
+          .text('OK')
+          .off('click')
+          .on('click', function () {
+            $('#messageModal').modal('hide');
+          });
+      }
+    },
+    error: function () {
+      // Show error message for AJAX failure
+      $('#messageModal .modal-title').text('Error');
+      $('#messageContent').text(
+        'An error occurred while deleting the department.'
+      );
+      $('#messageModalOkButton')
+        .text('OK')
+        .off('click')
+        .on('click', function () {
+          $('#messageModal').modal('hide');
+        });
+    },
+  });
+}
+
+// Delete Personnel
+
 // -------------------------------------------------------------
 
 // Even if search was not event driven, conflicts could occur - need handling for if user clicks on result that is no longer there
@@ -1874,3 +1897,5 @@ function confirmDeleteLocation() {
 // CLEAR CONSOLE OF ERRORS AND LOGS
 // No match found in 'x' if no search results
 // CHECK PREPARED STATEMENTS ARE USED
+// ARE ALL MODAL STYLINGS THE SAME?
+// CHECK ID'S NOT STORED IN MULTI-USER COMPATIBLE WAY
