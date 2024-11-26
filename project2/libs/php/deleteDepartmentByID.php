@@ -1,5 +1,5 @@
 <?php
-
+	// A department cannot be deleted if it has associated personnel (personnel.departmentID)
 	// example use from browser
 	// use insertDepartment.php first to create new dummy record and then specify it's id in the command below
 	// http://localhost/companydirectory/libs/php/deleteDepartmentByID.php?id=<id>

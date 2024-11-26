@@ -1715,9 +1715,7 @@ $('#locationTableBody').on(
     });
   }
 );
-
 // Submit the edit location form
-
 $('#editLocationForm').on('submit', function (e) {
   $('#editLocationModal').modal('hide');
   e.preventDefault();
@@ -1766,6 +1764,102 @@ $('#editLocationForm').on('submit', function (e) {
     },
   });
 });
+
+// ------------------ Delete Functionality ---------------------
+
+// Delete Location
+
+let locationToDelete = null; // Temporary storage for the location ID to be deleted
+// Attach click event using delegation for dynamically added buttons
+$('#locationTableBody').on('click', '.deleteLocationBtn', function () {
+  locationToDelete = $(this).data('id'); // Store the location ID
+
+  // Show confirmation message in the modal
+  $('#messageModal .modal-title').text('Confirm Deletion');
+  $('#messageContent').text('Are you sure you want to delete this location?');
+
+  // Replace the "OK" button with a "Delete" button for the confirmation modal
+  $('#messageModalOkButton')
+    .text('Delete')
+    .off('click') // Ensure no duplicate click handlers
+    .on('click', function () {
+      confirmDeleteLocation(); // Proceed with deletion when "Delete" is clicked
+    });
+
+  // Display the modal
+  $('#messageModal').modal('show');
+});
+// Function to confirm and delete the location
+function confirmDeleteLocation() {
+  if (locationToDelete) {
+    // Send an AJAX request to delete the location
+    $.ajax({
+      url: 'libs/php/deleteLocation.php',
+      type: 'POST',
+      data: { id: locationToDelete },
+      dataType: 'json',
+      success: function (response) {
+        if (response.status.code === '200') {
+          // Show success message
+          $('#messageModal .modal-title').text('Success');
+          $('#messageContent').text('Location deleted successfully.');
+          $('#messageModalOkButton')
+            .text('OK')
+            .off('click')
+            .on('click', function () {
+              $('#messageModal').modal('hide');
+            });
+          populateLocationsTable(); // Refresh the table
+        } else if (response.status.code === '400') {
+          console.log('dependency error');
+          // Show dependency error message
+          $('#messageModal .modal-title').text('Error');
+          $('#messageContent').text(
+            response.status.description ||
+              'This location cannot be deleted because it has dependent departments.'
+          );
+          $('#messageModalOkButton')
+            .text('OK')
+            .off('click')
+            .on('click', function () {
+              // Only close the modal when the user explicitly clicks "OK"
+              $('#messageModal').modal('hide');
+            });
+        } else {
+          // Show generic error message
+          $('#messageModal .modal-title').text('Error');
+          $('#messageContent').text(
+            response.status.description ||
+              'An error occurred while deleting the location.'
+          );
+          $('#messageModalOkButton')
+            .text('OK')
+            .off('click')
+            .on('click', function () {
+              $('#messageModal').modal('hide');
+            });
+        }
+        locationToDelete = null; // Clear the stored location ID
+      },
+      error: function () {
+        // Show error message
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(
+          'An error occurred while deleting the location.'
+        );
+        $('#messageModalOkButton')
+          .text('OK')
+          .off('click')
+          .on('click', function () {
+            $('#messageModal').modal('hide');
+          });
+        locationToDelete = null; // Clear the stored location ID
+      },
+    });
+  }
+}
+
+// Delete Department
 
 // -------------------------------------------------------------
 
