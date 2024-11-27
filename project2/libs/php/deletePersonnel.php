@@ -1,4 +1,13 @@
 <?php
+
+// FOR PROTECTED ACTIONS:
+
+include("init.php");
+
+// Example for a protected script
+requireAuth(); // Ensures user is authenticated
+
+
 // Enable error reporting for development (remove in production)
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);

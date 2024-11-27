@@ -1,14 +1,24 @@
 // For development purposes when users are updating/deleting/creating, will need initially setting to false for production
-var isAuth = false;
+// var isAuth = false;
 
 // ----------------- Handle Authentication -----------------------
 
 $(document).ready(function () {
-  // Check if the user is authenticated
-  if (!isAuth) {
-    // Show the login modal
-    $('#loginModal').modal('show');
-  }
+  // Check authentication status on page load
+  $.ajax({
+    url: 'libs/php/checkAuth.php',
+    type: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code !== 200) {
+        // If not authenticated, show the login modal
+        $('#loginModal').modal('show');
+      }
+    },
+    error: function () {
+      console.error('Error checking authentication status.');
+    },
+  });
 });
 
 $('#loginButton').on('click', function (e) {
@@ -18,7 +28,9 @@ $('#loginButton').on('click', function (e) {
   const password = $('#password').val().trim();
 
   if (!username || !password) {
-    alert('Please enter both username and password.');
+    $('#messageModal .modal-title').text('Error');
+    $('#messageContent').text('Please enter both username and password.');
+    $('#messageModal').modal('show');
     return;
   }
 
@@ -29,20 +41,14 @@ $('#loginButton').on('click', function (e) {
     dataType: 'json',
     success: function (response) {
       if (response.status.code === 200) {
-        // Close the login modal
-        $('#loginModal').modal('hide');
-
-        // Update global isAuth variable
-        isAuth = true;
-
-        // Show success message in messageModal
+        $('#loginModal').modal('hide'); // Close the login modal
         $('#messageModal .modal-title').text('Success');
         $('#messageContent').text(
           'Login successful! You now have full access.'
         );
         $('#messageModal').modal('show');
+        location.reload(); // Reload to apply session-based permissions
       } else {
-        // Show error message in messageModal
         $('#messageModal .modal-title').text('Error');
         $('#messageContent').text(
           response.status.description || 'Invalid username or password.'
@@ -50,14 +56,10 @@ $('#loginButton').on('click', function (e) {
         $('#messageModal').modal('show');
       }
     },
-    error: function (xhr, status, error) {
-      // Show generic error message in messageModal
+    error: function () {
       $('#messageModal .modal-title').text('Error');
-      $('#messageContent').text(
-        'An error occurred during login. Please try again later.'
-      );
+      $('#messageContent').text('An error occurred during login.');
       $('#messageModal').modal('show');
-      console.error('Login error:', error);
     },
   });
 });
@@ -68,7 +70,7 @@ $('#logoutButton').on('click', function () {
     type: 'POST',
     success: function () {
       // Update isAuth variable
-      isAuth = false;
+      // isAuth = false;
 
       // Show success message in messageModal
       $('#messageModal .modal-title').text('Success');
@@ -89,6 +91,14 @@ $('#logoutButton').on('click', function () {
       $('#messageModal').modal('show');
     },
   });
+});
+
+$(document).ajaxError(function (event, jqxhr) {
+  if (jqxhr.status === 403) {
+    $('#messageModal .modal-title').text('Unauthorized');
+    $('#messageContent').text('You are not authorized to perform this action.');
+    $('#messageModal').modal('show');
+  }
 });
 
 // ----------------- Fetch Data and Populate Tables ----------------
@@ -926,13 +936,6 @@ function capitaliseFirstLetter(string) {
 }
 // Opens add modal, depending on currently open tab
 $('#addBtn').click(function () {
-  if (!isAuth) {
-    $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('You are not authorized to add new items.');
-    $('#messageModal').modal('show');
-    return;
-  }
-
   if ($('#personnelBtn').hasClass('active')) {
     // Reset and show Add Personnel Modal
     $('#addPersonnelForm')[0].reset();
@@ -1057,14 +1060,6 @@ $('#savePersonnelBtn').click(function () {
 
   // Close the modal immediately
   $('#addPersonnelModal').modal('hide');
-
-  // Check if the user is authorized
-  if (!isAuth) {
-    $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('You are not authorized to add new personnel.');
-    $('#messageModal').modal('show');
-    return;
-  }
 
   // Check if all required fields are filled
   if (!firstName || !lastName || !departmentID || !email || !locationID) {
@@ -1229,96 +1224,6 @@ $('#saveDepartmentBtn').click(function () {
   });
 });
 
-// $('#saveDepartmentBtn').click(function () {
-//   const departmentName = $('#addDepartmentName').val().trim();
-//   const locationID = $('#addDepartmentLocation').val();
-
-//   // Close the modal immediately
-//   $('#addDepartmentModal').modal('hide');
-
-//   // Check if the user is authorized
-//   if (!isAuth) {
-//     $('#messageModal .modal-title').text('Error');
-//     $('#messageContent').text('You are not authorized to add new departments.');
-//     $('#messageModal').modal('show');
-//     return;
-//   }
-
-//   // Check if all fields are filled
-//   if (!departmentName || !locationID) {
-//     $('#messageModal .modal-title').text('Error');
-//     $('#messageContent').text('Please fill out all required fields.');
-//     $('#messageModal').modal('show');
-//     return;
-//   }
-
-//   // Capitalize department name
-//   const formattedDepartmentName = capitaliseFirstLetter(departmentName);
-
-//   // Validate department name and location association before proceeding
-//   $.ajax({
-//     url: 'libs/php/validateDepartmentLocationByName.php',
-//     method: 'POST',
-//     data: {
-//       name: formattedDepartmentName, // Check against department name
-//       locationID: locationID, // Use locationID
-//     },
-//     dataType: 'json',
-//     success: function (response) {
-//       if (response.status.code === '400') {
-//         // Show validation error if the department-location association is invalid
-//         $('#messageModal .modal-title').text('Error');
-//         $('#messageContent').text(response.status.description);
-//         $('#messageModal').modal('show');
-//         return;
-//       }
-
-//       // If validation passes, proceed to insert the new department
-//       $.ajax({
-//         url: 'libs/php/insertDepartment.php',
-//         method: 'POST',
-//         data: {
-//           name: formattedDepartmentName, // 'name' matches the PHP script
-//           locationID: locationID, // 'locationID' matches the PHP script
-//         },
-//         dataType: 'json',
-//         success: function (response) {
-//           if (response.status.code === '200') {
-//             // Refresh the Departments Table
-//             populateDepartmentsTable();
-
-//             // Show success message
-//             $('#messageModal .modal-title').text('Success');
-//             $('#messageContent').text('Department added successfully!');
-//             $('#messageModal').modal('show');
-//           } else {
-//             $('#messageModal .modal-title').text('Error');
-//             $('#messageContent').text(
-//               'Failed to add department. Please try again.'
-//             );
-//             $('#messageModal').modal('show');
-//           }
-//         },
-//         error: function (xhr, status, error) {
-//           console.error('Error during add request:', status, error);
-//           $('#messageModal .modal-title').text('Error');
-//           $('#messageContent').text(
-//             'An error occurred while adding the department. Please try again.'
-//           );
-//           $('#messageModal').modal('show');
-//         },
-//       });
-//     },
-//     error: function (xhr, status, error) {
-//       console.error('Error validating department and location:', status, error);
-//       $('#messageModal .modal-title').text('Error');
-//       $('#messageContent').text(
-//         'Failed to validate department and location. Please try again.'
-//       );
-//       $('#messageModal').modal('show');
-//     },
-//   });
-// });
 // Function to capitalize the first letter of each word
 
 function capitaliseFirstLetter(string) {
@@ -1330,14 +1235,6 @@ $('#saveLocationBtn').click(function () {
 
   // Close the modal immediately
   $('#addLocationModal').modal('hide');
-
-  // Check if the user is authorized
-  if (!isAuth) {
-    $('#messageModal .modal-title').text('Error');
-    $('#messageContent').text('You are not authorized to add new locations.');
-    $('#messageModal').modal('show');
-    return;
-  }
 
   // Check if the location name is filled
   if (!locationName) {
@@ -2068,3 +1965,5 @@ $('#confirmDeleteBtn')
 // ENSURE PASSWORD MODAL CANNOT BE DISSMISSED
 // PASSWORD MODAL USING ALERTS CURRENTLY NOT MESSAGE MODAL
 // LOGOUT / LOGIN BUTTON NEEDS TO CHANGE
+// DO I NEED SESSION START AT TOP OF INDEX.HTML?
+// CHECK ALL PHP SCRIPTS ARE STILL NEEDED

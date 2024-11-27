@@ -1,33 +1,31 @@
 <?php
-session_start(); // Ensure session is started
+session_start();
 
-include 'config.php';
+include("config.php");
 
-header('Content-Type: application/json');
-
+// Validate inputs
 $username = $_POST['username'] ?? null;
 $password = $_POST['password'] ?? null;
 
-// Validate inputs
 if (!$username || !$password) {
     echo json_encode([
         'status' => [
             'code' => 400,
             'name' => 'error',
-            'description' => 'Username and password are required',
+            'description' => 'Missing username or password.',
         ],
     ]);
     exit;
 }
 
-// Check username and password
+// Check credentials
 if ($username === $admin_username && password_verify($password, $hashedPassword)) {
-    $_SESSION['isAuth'] = true;
+    $_SESSION['isAuth'] = true; // Set session variable
     echo json_encode([
         'status' => [
             'code' => 200,
             'name' => 'success',
-            'description' => 'Login successful',
+            'description' => 'Login successful.',
         ],
     ]);
 } else {
@@ -35,8 +33,10 @@ if ($username === $admin_username && password_verify($password, $hashedPassword)
         'status' => [
             'code' => 401,
             'name' => 'error',
-            'description' => 'Invalid username or password',
+            'description' => 'Invalid username or password.',
         ],
     ]);
 }
+?>
+
 
