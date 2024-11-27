@@ -15,6 +15,11 @@ session_start();
   </head>
   <!----------    Body     ---------->
   <body>
+    <div id="loadingSpinner" class="spinner-overlay">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
     <section>
       <div class="appHeader">
         <div class="row">
@@ -156,8 +161,7 @@ session_start();
 
       <!----------     Footer      ---------->
       <footer class="border-top text-center fw-bold">
-        <p class="fw-light my-3">Company Directory version 1.0</p>
-        <button id="logoutButton" class="btn btn-secondary">Logout</button>
+        <div class="mt-1 mb-1" id="authButtonContainer"></div>
       </footer>
     </section>
 

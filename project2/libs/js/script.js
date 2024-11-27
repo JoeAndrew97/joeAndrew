@@ -1,7 +1,9 @@
 // For development purposes when users are updating/deleting/creating, will need initially setting to false for production
-// var isAuth = false;
 
 // ----------------- Handle Authentication -----------------------
+
+// Used for conditional rendering, not authentication
+var isLoggedIn = false;
 
 $(document).ready(function () {
   // Check authentication status on page load
@@ -10,17 +12,25 @@ $(document).ready(function () {
     type: 'GET',
     dataType: 'json',
     success: function (response) {
-      if (response.status.code !== 200) {
-        // If not authenticated, show the login modal
-        $('#loginModal').modal('show');
+      if (response.status.code === 200) {
+        isLoggedIn = true; // User is authenticated
+      } else {
+        isLoggedIn = false; // User is not authenticated
       }
+      renderAuthButton(); // Render the correct button
     },
     error: function () {
       console.error('Error checking authentication status.');
+      isLoggedIn = false; // Default to not authenticated on error
+      renderAuthButton();
+    },
+    complete: function () {
+      $('#loadingSpinner').fadeOut('slow');
     },
   });
 });
 
+// Login logic
 $('#loginButton').on('click', function (e) {
   e.preventDefault();
 
@@ -47,7 +57,8 @@ $('#loginButton').on('click', function (e) {
           'Login successful! You now have full access.'
         );
         $('#messageModal').modal('show');
-        location.reload(); // Reload to apply session-based permissions
+        isLoggedIn = true; // Update global variable
+        renderAuthButton(); // Update the button
       } else {
         $('#messageModal .modal-title').text('Error');
         $('#messageContent').text(
@@ -64,26 +75,19 @@ $('#loginButton').on('click', function (e) {
   });
 });
 
-$('#logoutButton').on('click', function () {
+// Logout logic
+$('#authButtonContainer').on('click', '#logoutButton', function () {
   $.ajax({
     url: 'libs/php/logout.php',
     type: 'POST',
     success: function () {
-      // Update isAuth variable
-      // isAuth = false;
-
-      // Show success message in messageModal
-      $('#messageModal .modal-title').text('Success');
-      $('#messageContent').text('You have been logged out.');
+      isLoggedIn = false; // Update the global variable
+      renderAuthButton(); // Re-render the button
+      $('#messageModal .modal-title').text('Logged Out');
+      $('#messageContent').text('You have successfully logged out.');
       $('#messageModal').modal('show');
-
-      // After the user clicks "OK", reload the page
-      $('#messageModalOkButton').on('click', function () {
-        location.reload();
-      });
     },
     error: function () {
-      // Show error message in messageModal
       $('#messageModal .modal-title').text('Error');
       $('#messageContent').text(
         'An error occurred during logout. Please try again.'
@@ -93,12 +97,34 @@ $('#logoutButton').on('click', function () {
   });
 });
 
-$(document).ajaxError(function (event, jqxhr) {
-  if (jqxhr.status === 403) {
-    $('#messageModal .modal-title').text('Unauthorized');
-    $('#messageContent').text('You are not authorized to perform this action.');
-    $('#messageModal').modal('show');
+// Function to render the login/logout button dynamically
+function renderAuthButton() {
+  const $authButtonContainer = $('#authButtonContainer');
+  $authButtonContainer.empty(); // Clear any existing buttons
+
+  if (isLoggedIn) {
+    // Render the Logout button
+    const logoutButton = `
+      <button id="logoutButton" class="btn btn-secondary">Logout</button>
+    `;
+    $authButtonContainer.append(logoutButton);
+  } else {
+    // Render the Login button
+    const loginButton = `
+      <button id="loginButton" class="btn btn-primary">Login</button>
+    `;
+    $authButtonContainer.append(loginButton);
+
+    // Attach click event to the Login button
+    $('#loginButton').on('click', function () {
+      $('#loginModal').modal('show'); // Show the login modal
+    });
   }
+}
+
+// Run this on page load to render the correct button
+$(document).ready(function () {
+  renderAuthButton();
 });
 
 // ----------------- Fetch Data and Populate Tables ----------------
@@ -1698,30 +1724,34 @@ $('#editLocationForm').on('submit', function (e) {
 // Delete Location
 
 let locationToDelete = null; // Temporary storage for the location ID to be deleted
+
 // Attach click event using delegation for dynamically added buttons
 $('#locationTableBody').on('click', '.deleteLocationBtn', function () {
   locationToDelete = $(this).data('id'); // Store the location ID
 
-  // Show confirmation message in the modal
-  $('#messageModal .modal-title').text('Confirm Deletion');
-  $('#messageContent').text('Are you sure you want to delete this location?');
+  // Update the confirmation modal
+  $('#confirmDeleteModal .modal-title').text('Confirm Deletion');
+  $('#confirmDeleteModal .modal-body p').text(
+    'Are you sure you want to delete this location?'
+  );
 
-  // Replace the "OK" button with a "Delete" button for the confirmation modal
-  $('#messageModalOkButton')
-    .text('Delete')
-    .off('click') // Ensure no duplicate click handlers
+  // Show the confirmation modal
+  $('#confirmDeleteModal').modal('show');
+
+  // Confirm deletion when the "Delete" button is clicked
+  $('#confirmDeleteBtn')
+    .off('click') // Remove previous click handlers
     .on('click', function () {
-      confirmDeleteLocation(); // Proceed with deletion when "Delete" is clicked
+      confirmDeleteLocation(); // Proceed with deletion
     });
-
-  // Display the modal
-  $('#messageModal').modal('show');
 });
+
 // Function to confirm and delete the location
 function confirmDeleteLocation() {
-  $('#searchInp').val('');
-  $('#clearSearch').hide();
   if (locationToDelete) {
+    // Close the confirmation modal before sending the request
+    $('#confirmDeleteModal').modal('hide');
+
     // Send an AJAX request to delete the location
     $.ajax({
       url: 'libs/php/deleteLocation.php',
@@ -1730,60 +1760,56 @@ function confirmDeleteLocation() {
       dataType: 'json',
       success: function (response) {
         if (response.status.code === '200') {
-          // Show success message
+          // Update the success modal
           $('#messageModal .modal-title').text('Success');
           $('#messageContent').text('Location deleted successfully.');
           $('#messageModalOkButton')
-            .text('OK')
             .off('click')
             .on('click', function () {
-              $('#messageModal').modal('hide');
+              populateLocationsTable(); // Refresh the table
+              $('#messageModal').modal('hide'); // Close the modal only when user clicks "OK"
             });
-          populateLocationsTable(); // Refresh the table
+          $('#messageModal').modal('show');
         } else if (response.status.code === '400') {
-          console.log('dependency error');
-          // Show dependency error message
+          // Handle dependency error
           $('#messageModal .modal-title').text('Error');
           $('#messageContent').text(
             response.status.description ||
               'This location cannot be deleted because it has dependent departments.'
           );
           $('#messageModalOkButton')
-            .text('OK')
             .off('click')
             .on('click', function () {
-              // Only close the modal when the user explicitly clicks "OK"
-              $('#messageModal').modal('hide');
+              $('#messageModal').modal('hide'); // Close the modal only when user clicks "OK"
             });
+          $('#messageModal').modal('show');
         } else {
-          // Show generic error message
+          // Handle other errors
           $('#messageModal .modal-title').text('Error');
           $('#messageContent').text(
             response.status.description ||
               'An error occurred while deleting the location.'
           );
           $('#messageModalOkButton')
-            .text('OK')
             .off('click')
             .on('click', function () {
-              $('#messageModal').modal('hide');
+              $('#messageModal').modal('hide'); // Close the modal only when user clicks "OK"
             });
+          $('#messageModal').modal('show');
         }
-        locationToDelete = null; // Clear the stored location ID
       },
       error: function () {
-        // Show error message
+        // Handle AJAX error
         $('#messageModal .modal-title').text('Error');
         $('#messageContent').text(
           'An error occurred while deleting the location.'
         );
         $('#messageModalOkButton')
-          .text('OK')
           .off('click')
           .on('click', function () {
-            $('#messageModal').modal('hide');
+            $('#messageModal').modal('hide'); // Close the modal only when user clicks "OK"
           });
-        locationToDelete = null; // Clear the stored location ID
+        $('#messageModal').modal('show');
       },
     });
   }
@@ -1946,11 +1972,24 @@ $('#confirmDeleteBtn')
 
 // -------------------------------------------------------------
 
+// Event handler for the "OK" button in the message modal
+// Check this is not interfering with other logic
+$(document).on('click', '#messageModalOkButton', function () {
+  $('#messageModal').modal('hide');
+});
+
+$(document).on('keydown', function (event) {
+  if (event.key === 'Enter') {
+    // Check if a modal is currently open
+    if ($('.modal.show').length) {
+      event.preventDefault(); // Prevent the default form submission or modal closing
+    }
+  }
+});
+
 // Even if search was not event driven, conflicts could occur - need handling for if user clicks on result that is no longer there
 // test multiple user functionality with multiple browser sesstions
 
-// ADD PRELOADER
-// HANDLE IF USER PRESSES ENTER WHEN A MODAL IS OPEN
 // CHECK PREPARED STATEMENTS
 // CHECK IF e.preventDefault needed for all
 // CHECK FOR on.click vs on.submit event triggers for forms
@@ -1960,10 +1999,6 @@ $('#confirmDeleteBtn')
 // ARE ALL MODAL STYLINGS THE SAME?
 // CHECK ID'S NOT STORED IN MULTI-USER COMPATIBLE WAY
 // CLEAR SEARCH BARS AND ENSURE TABLE REFRESHED AFTER SUCCESSFUL DELETION
-// OK BUTTON NOT WORKING ON MODALS FOR CONFIRM DELETE -- MessageModal/Confirmation Modal mixups?
-// MOVE MODALS ABOVE FOOTER IF APPROPRIATE
-// ENSURE PASSWORD MODAL CANNOT BE DISSMISSED
-// PASSWORD MODAL USING ALERTS CURRENTLY NOT MESSAGE MODAL
-// LOGOUT / LOGIN BUTTON NEEDS TO CHANGE
+
 // DO I NEED SESSION START AT TOP OF INDEX.HTML?
 // CHECK ALL PHP SCRIPTS ARE STILL NEEDED
