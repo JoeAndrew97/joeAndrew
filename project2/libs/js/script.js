@@ -1,5 +1,95 @@
 // For development purposes when users are updating/deleting/creating, will need initially setting to false for production
-var isAuth = true;
+var isAuth = false;
+
+// ----------------- Handle Authentication -----------------------
+
+$(document).ready(function () {
+  // Check if the user is authenticated
+  if (!isAuth) {
+    // Show the login modal
+    $('#loginModal').modal('show');
+  }
+});
+
+$('#loginButton').on('click', function (e) {
+  e.preventDefault();
+
+  const username = $('#username').val().trim();
+  const password = $('#password').val().trim();
+
+  if (!username || !password) {
+    alert('Please enter both username and password.');
+    return;
+  }
+
+  $.ajax({
+    url: 'libs/php/login.php',
+    type: 'POST',
+    data: { username, password },
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === 200) {
+        // Close the login modal
+        $('#loginModal').modal('hide');
+
+        // Update global isAuth variable
+        isAuth = true;
+
+        // Show success message in messageModal
+        $('#messageModal .modal-title').text('Success');
+        $('#messageContent').text(
+          'Login successful! You now have full access.'
+        );
+        $('#messageModal').modal('show');
+      } else {
+        // Show error message in messageModal
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(
+          response.status.description || 'Invalid username or password.'
+        );
+        $('#messageModal').modal('show');
+      }
+    },
+    error: function (xhr, status, error) {
+      // Show generic error message in messageModal
+      $('#messageModal .modal-title').text('Error');
+      $('#messageContent').text(
+        'An error occurred during login. Please try again later.'
+      );
+      $('#messageModal').modal('show');
+      console.error('Login error:', error);
+    },
+  });
+});
+
+$('#logoutButton').on('click', function () {
+  $.ajax({
+    url: 'libs/php/logout.php',
+    type: 'POST',
+    success: function () {
+      // Update isAuth variable
+      isAuth = false;
+
+      // Show success message in messageModal
+      $('#messageModal .modal-title').text('Success');
+      $('#messageContent').text('You have been logged out.');
+      $('#messageModal').modal('show');
+
+      // After the user clicks "OK", reload the page
+      $('#messageModalOkButton').on('click', function () {
+        location.reload();
+      });
+    },
+    error: function () {
+      // Show error message in messageModal
+      $('#messageModal .modal-title').text('Error');
+      $('#messageContent').text(
+        'An error occurred during logout. Please try again.'
+      );
+      $('#messageModal').modal('show');
+    },
+  });
+});
 
 // ----------------- Fetch Data and Populate Tables ----------------
 
@@ -68,70 +158,6 @@ function populatePersonnelTable() {
     },
   });
 }
-// function populatePersonnelTable() {
-//   const $personnelTableBody = $('#personnelTableBody');
-//   $personnelTableBody.empty(); // Clear any existing rows
-
-//   // Fetch the latest data from the server
-//   $.ajax({
-//     url: 'libs/php/getAll.php',
-//     method: 'GET',
-//     dataType: 'json',
-//     success: function (response) {
-//       if (response.status.code === '200') {
-//         // Populate the table with the fetched data
-//         response.data.forEach((person) => {
-//           const rowHtml = `
-//             <tr>
-//               <td class="align-middle text-nowrap">${
-//                 person.lastName || 'N/A'
-//               }, ${person.firstName || 'N/A'}</td>
-//               <td class="align-middle text-nowrap d-md-table-cell">${
-//                 person.jobTitle || ''
-//               }</td>
-//               <td class="align-middle text-nowrap d-md-table-cell">${
-//                 person.department || 'N/A'
-//               }</td>
-//               <td class="align-middle text-nowrap d-md-table-cell">${
-//                 person.location || 'N/A'
-//               }</td>
-//               <td class="align-middle text-nowrap d-md-table-cell">${
-//                 person.email || 'N/A'
-//               }</td>
-//               <td class="text-end text-nowrap">
-//                   <button type="button" class="btn btn-primary btn-sm edit-btn"
-//                           data-bs-toggle="modal" data-bs-target="#editPersonnelModal"
-//                           data-id="${person.id || ''}">
-//                       <i class="fa-solid fa-pencil fa-fw"></i>
-//                   </button>
-//                   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#deletePersonnelModal" data-id="${
-//                     person.id || ''
-//                   }">
-//                       <i class="fa-solid fa-trash fa-fw"></i>
-//                   </button>
-//               </td>
-//             </tr>
-//           `;
-//           $personnelTableBody.append(rowHtml);
-//         });
-
-//         // Attach click event to all edit buttons
-//         $('.edit-btn').on('click', function () {
-//           const employeeId = $(this).data('id');
-//           populateEditModal(employeeId);
-//         });
-//       } else {
-//         console.error(
-//           'Failed to fetch personnel data:',
-//           response.status.description
-//         );
-//       }
-//     },
-//     error: function (xhr, status, error) {
-//       console.error('Error fetching personnel data:', status, error);
-//     },
-//   });
-// }
 // AJAX request to getDepartmentsWithLocations.php
 function populateDepartmentsTable() {
   const $departmentsTableBody = $('#departmentTableBody');
@@ -424,7 +450,6 @@ $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
 $('#clearSearch').on('click', function () {
   $('#searchInp').val('');
   $(this).hide();
-
   // Show all rows in all tables
   $(
     '#personnelTableBody tr, #departmentTableBody tr, #locationTableBody tr'
@@ -1797,6 +1822,8 @@ $('#locationTableBody').on('click', '.deleteLocationBtn', function () {
 });
 // Function to confirm and delete the location
 function confirmDeleteLocation() {
+  $('#searchInp').val('');
+  $('#clearSearch').hide();
   if (locationToDelete) {
     // Send an AJAX request to delete the location
     $.ajax({
@@ -1885,6 +1912,8 @@ $('#departmentTableBody').on('click', '.deleteDepartmentBtn', function () {
 });
 // Confirm and delete the department
 function confirmDeleteDepartment(departmentID) {
+  $('#searchInp').val('');
+  $('#clearSearch').hide();
   $.ajax({
     url: 'libs/php/deleteDepartment.php',
     type: 'POST',
@@ -1950,7 +1979,6 @@ function confirmDeleteDepartment(departmentID) {
 
 // Global variable to store the ID of the item to delete
 let itemToDelete = null;
-
 // Event listener for delete buttons
 $('#personnelTableBody').on('click', '.deletePersonnelBtn', function () {
   const personnelID = $(this).data('id');
@@ -1964,11 +1992,12 @@ $('#personnelTableBody').on('click', '.deletePersonnelBtn', function () {
   // Show the confirmation modal
   $('#confirmDeleteModal').modal('show');
 });
-
 // Handle confirmation of deletion
 $('#confirmDeleteBtn')
   .off('click')
   .on('click', function () {
+    $('#searchInp').val('');
+    $('#clearSearch').hide();
     if (!itemToDelete) return; // Ensure there's an ID to delete
 
     // Send delete request
@@ -2034,4 +2063,8 @@ $('#confirmDeleteBtn')
 // ARE ALL MODAL STYLINGS THE SAME?
 // CHECK ID'S NOT STORED IN MULTI-USER COMPATIBLE WAY
 // CLEAR SEARCH BARS AND ENSURE TABLE REFRESHED AFTER SUCCESSFUL DELETION
-// OK BUTTON NOT WORKING ON MODALS
+// OK BUTTON NOT WORKING ON MODALS FOR CONFIRM DELETE -- MessageModal/Confirmation Modal mixups?
+// MOVE MODALS ABOVE FOOTER IF APPROPRIATE
+// ENSURE PASSWORD MODAL CANNOT BE DISSMISSED
+// PASSWORD MODAL USING ALERTS CURRENTLY NOT MESSAGE MODAL
+// LOGOUT / LOGIN BUTTON NEEDS TO CHANGE

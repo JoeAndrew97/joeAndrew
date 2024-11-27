@@ -1,6 +1,13 @@
 <?php
 // Enable error reporting for development (remove in production)
 ini_set('display_errors', 'On');
+
+// PROTECTING SENSITVIE BACKEND OPERATIONS CODE
+// if (empty($_SESSION['isAuth']) || $_SESSION['isAuth'] !== true) {
+//     header('HTTP/1.1 403 Forbidden');
+//     echo json_encode(['status' => 'error', 'message' => 'Unauthorized access.']);
+//     exit;
+// }
 error_reporting(E_ALL);
 
 include("config.php");
