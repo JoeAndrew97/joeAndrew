@@ -1655,42 +1655,42 @@ $('#editDepartmentForm').on('submit', function (e) {
 
 //  ----- Edit Locations ----
 
+var locationId = null;
+
 // Triggered when the edit button is clicked
-$('#locationTableBody').on(
-  'show.bs.modal',
-  '.btn-primary[data-bs-target="#editLocationModal"]',
-  function () {
-    const locationID = $(this).data('id');
+$('#editLocationModal').on('show.bs.modal', function (e) {
+  const button = $(e.relatedTarget);
+  locationID = button.data('id'); // Extract `data-id` value
+  console.log(locationID);
 
-    // Fetch the location details using an AJAX call
-    $.ajax({
-      url: 'libs/php/getLocationByID.php', // Replace with your PHP endpoint for fetching location details
-      type: 'GET',
-      data: { id: locationID }, // Send location ID as a parameter
-      dataType: 'json',
-      success: function (response) {
-        if (response.status.code === '200' && response.data.length > 0) {
-          const location = response.data[0];
+  // Fetch the location details using an AJAX call
+  $.ajax({
+    url: 'libs/php/getLocationByID.php', // Replace with your PHP endpoint for fetching location details
+    type: 'GET',
+    data: { id: locationID }, // Send location ID as a parameter
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200' && response.data.length > 0) {
+        const location = response.data[0];
 
-          // Populate the modal fields
-          $('#editLocationID').val(location.id);
-          $('#editLocationName').val(location.name);
+        // Populate the modal fields
+        $('#editLocationID').val(location.id);
+        $('#editLocationName').val(location.name);
 
-          // Show the modal
-          $('#editLocationModal').modal('show');
-        } else {
-          console.error(
-            'Failed to fetch location details:',
-            response.status.description
-          );
-        }
-      },
-      error: function (xhr, status, error) {
-        console.error('Error fetching location details:', status, error);
-      },
-    });
-  }
-);
+        // Show the modal
+        $('#editLocationModal').modal('show');
+      } else {
+        console.error(
+          'Failed to fetch location details:',
+          response.status.description
+        );
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error('Error fetching location details:', status, error);
+    },
+  });
+});
 
 // function populateLocationsDropdown() {
 //   // Fetch locations via AJAX
@@ -1721,11 +1721,12 @@ $('#locationTableBody').on(
 // }
 // Submit the edit location form
 $('#editLocationForm').on('submit', function (e) {
+  console.log('Form submitted');
   $('#editLocationModal').modal('hide');
   e.preventDefault();
 
   const locationData = {
-    id: $('#editLocationID').val(),
+    id: locationID,
     name: $('#editLocationName').val().trim(),
   };
 
@@ -1771,253 +1772,124 @@ $('#editLocationForm').on('submit', function (e) {
 
 // ------------------ Delete Functionality ---------------------
 
-// Delete Location
-
-let locationToDelete = null; // Temporary storage for the location ID to be deleted
-
-// Attach click event using delegation for dynamically added buttons
-$('#locationTableBody').on('click', '.deleteLocationBtn', function () {
-  locationToDelete = $(this).data('id'); // Store the location ID
-
-  // Update the confirmation modal
-  $('#confirmDeleteModal .modal-title').text('Confirm Deletion');
-  $('#confirmDeleteModal .modal-body p').text(
-    'Are you sure you want to delete this location?'
-  );
-
-  // Show the confirmation modal
-  $('#confirmDeleteModal').modal('show');
-
-  // Confirm deletion when the "Delete" button is clicked
-  $('#confirmDeleteBtn')
-    .off('click') // Remove previous click handlers
-    .on('click', function () {
-      confirmDeleteLocation(); // Proceed with deletion
-    });
-});
-
-// Function to confirm and delete the location
-function confirmDeleteLocation() {
-  if (locationToDelete) {
-    // Close the confirmation modal before sending the request
-    $('#confirmDeleteModal').modal('hide');
-
-    // Send an AJAX request to delete the location
-    $.ajax({
-      url: 'libs/php/deleteLocation.php',
-      type: 'POST',
-      data: { id: locationToDelete },
-      dataType: 'json',
-      success: function (response) {
-        if (response.status.code === '200') {
-          // Update the success modal
-          $('#messageModal .modal-title').text('Success');
-          $('#messageContent').text('Location deleted successfully.');
-          $('#messageModalOkButton')
-            .off('click')
-            .on('click', function () {
-              populateLocationsTable(); // Refresh the table
-              $('#messageModal').modal('hide'); // Close the modal only when user clicks "OK"
-            });
-          $('#messageModal').modal('show');
-        } else if (response.status.code === '400') {
-          // Handle dependency error
-          $('#messageModal .modal-title').text('Error');
-          $('#messageContent').text(
-            response.status.description ||
-              'This location cannot be deleted because it has dependent departments.'
-          );
-          $('#messageModalOkButton')
-            .off('click')
-            .on('click', function () {
-              $('#messageModal').modal('hide'); // Close the modal only when user clicks "OK"
-            });
-          $('#messageModal').modal('show');
-        } else {
-          // Handle other errors
-          $('#messageModal .modal-title').text('Error');
-          $('#messageContent').text(
-            response.status.description ||
-              'An error occurred while deleting the location.'
-          );
-          $('#messageModalOkButton')
-            .off('click')
-            .on('click', function () {
-              $('#messageModal').modal('hide'); // Close the modal only when user clicks "OK"
-            });
-          $('#messageModal').modal('show');
-        }
-      },
-      error: function () {
-        // Handle AJAX error
-        $('#messageModal .modal-title').text('Error');
-        $('#messageContent').text(
-          'An error occurred while deleting the location.'
-        );
-        $('#messageModalOkButton')
-          .off('click')
-          .on('click', function () {
-            $('#messageModal').modal('hide'); // Close the modal only when user clicks "OK"
-          });
-        $('#messageModal').modal('show');
-      },
-    });
-  }
-}
-
-// Delete Department
-
-// Attach click event for delete buttons
-$('#departmentTableBody').on('click', '.deleteDepartmentBtn', function () {
-  const departmentID = $(this).data('id');
-
-  // Show confirmation modal
-  $('#messageModal .modal-title').text('Confirm Deletion');
-  $('#messageContent').text('Are you sure you want to delete this department?');
-  $('#messageModalOkButton')
-    .text('Delete')
-    .off('click')
-    .on('click', function () {
-      confirmDeleteDepartment(departmentID);
-    });
-
-  $('#messageModal').modal('show');
-});
-// Confirm and delete the department
-function confirmDeleteDepartment(departmentID) {
-  $('#searchInp').val('');
-  $('#clearSearch').hide();
-  $.ajax({
-    url: 'libs/php/deleteDepartment.php',
-    type: 'POST',
-    data: { id: departmentID },
-    dataType: 'json',
-    success: function (response) {
-      if (response.status.code === '200') {
-        // Show success message
-        $('#messageModal .modal-title').text('Success');
-        $('#messageContent').text('Department deleted successfully.');
-        $('#messageModalOkButton')
-          .text('OK')
-          .off('click')
-          .on('click', function () {
-            $('#messageModal').modal('hide');
-          });
-        populateDepartmentsTable(); // Refresh the table
-      } else if (response.status.code === '400') {
-        // Show error message for dependencies
-        $('#messageModal .modal-title').text('Error');
-        $('#messageContent').text(
-          response.status.description ||
-            'This department cannot be deleted because it has associated personnel.'
-        );
-        $('#messageModalOkButton')
-          .text('OK')
-          .off('click')
-          .on('click', function () {
-            $('#messageModal').modal('hide');
-          });
-      } else {
-        // Show generic error message
-        $('#messageModal .modal-title').text('Error');
-        $('#messageContent').text(
-          response.status.description ||
-            'An error occurred while deleting the department.'
-        );
-        $('#messageModalOkButton')
-          .text('OK')
-          .off('click')
-          .on('click', function () {
-            $('#messageModal').modal('hide');
-          });
-      }
-    },
-    error: function () {
-      // Show error message for AJAX failure
-      $('#messageModal .modal-title').text('Error');
-      $('#messageContent').text(
-        'An error occurred while deleting the department.'
-      );
-      $('#messageModalOkButton')
-        .text('OK')
-        .off('click')
-        .on('click', function () {
-          $('#messageModal').modal('hide');
-        });
-    },
-  });
-}
-// Delete Personnel
-
 // Global variable to store the ID of the item to delete
 let itemToDelete = null;
-// Event listener for delete buttons
-$('#personnelTableBody').on('click', '.deletePersonnelBtn', function () {
-  const personnelID = $(this).data('id');
-  itemToDelete = personnelID;
+let deleteType = null; // Track the type of item being deleted
 
-  // Update the modal text dynamically
+// Handle delete button clicks for Personnel
+$('#personnelTableBody').on('click', '.deletePersonnelBtn', function () {
+  itemToDelete = $(this).data('id'); // Store Personnel ID
+  deleteType = 'personnel'; // Set the delete type
+
+  // Update modal content
   $('#confirmDeleteModal .modal-body p').text(
     'Are you sure you want to delete this personnel record?'
   );
 
-  // Show the confirmation modal
+  // Show the modal
   $('#confirmDeleteModal').modal('show');
 });
-// Handle confirmation of deletion
-$('#confirmDeleteBtn')
-  .off('click')
-  .on('click', function () {
-    $('#searchInp').val('');
-    $('#clearSearch').hide();
-    if (!itemToDelete) return; // Ensure there's an ID to delete
 
-    // Send delete request
-    $.ajax({
-      url: 'libs/php/deletePersonnel.php', // Update with your delete API
-      type: 'POST',
-      data: { id: itemToDelete },
-      dataType: 'json',
-      success: function (response) {
-        if (response.status.code === '200') {
-          // Successfully deleted
-          $('#confirmDeleteModal').modal('hide'); // Close the modal
-          $('#messageModal .modal-title').text('Success');
-          $('#messageContent').text('Personnel record deleted successfully.');
-          $('#messageModal').modal('show');
+// Handle delete button clicks for Locations
+$('#locationTableBody').on('click', '.deleteLocationBtn', function () {
+  itemToDelete = $(this).data('id'); // Store Location ID
+  deleteType = 'location'; // Set the delete type
 
-          // Refresh the table
-          populatePersonnelTable();
-        } else if (response.status.code === '400') {
-          // Dependency error
-          $('#confirmDeleteModal').modal('hide'); // Close the confirmation modal
-          $('#messageModal .modal-title').text('Error');
-          $('#messageContent').text(
-            response.status.description ||
-              'This personnel record cannot be deleted due to dependencies.'
-          );
-          $('#messageModal').modal('show');
-        } else {
-          // Other errors
-          $('#confirmDeleteModal').modal('hide');
-          $('#messageModal .modal-title').text('Error');
-          $('#messageContent').text(
-            response.status.description || 'Failed to delete personnel record.'
-          );
-          $('#messageModal').modal('show');
-        }
-      },
-      error: function (xhr, status, error) {
-        $('#confirmDeleteModal').modal('hide'); // Close the confirmation modal
-        $('#messageModal .modal-title').text('Error');
-        $('#messageContent').text(
-          'An error occurred while deleting the personnel record.'
-        );
-        $('#messageModal').modal('show');
-        console.error('Error:', status, error);
-      },
+  // Update modal content
+  $('#confirmDeleteModal .modal-body p').text(
+    'Are you sure you want to delete this location?'
+  );
+
+  // Show the modal
+  $('#confirmDeleteModal').modal('show');
+});
+
+// Handle delete button clicks for Departments
+$('#departmentTableBody').on('click', '.deleteDepartmentBtn', function () {
+  itemToDelete = $(this).data('id'); // Store Department ID
+  deleteType = 'department'; // Set the delete type
+
+  // Update modal content
+  $('#confirmDeleteModal .modal-body p').text(
+    'Are you sure you want to delete this department?'
+  );
+
+  // Show the modal
+  $('#confirmDeleteModal').modal('show');
+});
+
+// Handle 'show.bs.modal' to reset the confirmation button
+$('#confirmDeleteModal').on('show.bs.modal', function () {
+  // Clear previous click handlers
+  $('#confirmDeleteBtn')
+    .off('click')
+    .on('click', function () {
+      confirmDeletion(); // Call the appropriate delete function
     });
+});
+
+// Function to confirm and handle deletion
+function confirmDeletion() {
+  if (!itemToDelete || !deleteType) return; // Ensure valid state
+
+  // Close the modal
+  $('#confirmDeleteModal').modal('hide');
+
+  // Perform the AJAX request based on the delete type
+  let url = '';
+  let successMessage = '';
+  let errorMessage = '';
+
+  if (deleteType === 'personnel') {
+    url = 'libs/php/deletePersonnel.php';
+    successMessage = 'Personnel record deleted successfully.';
+    errorMessage = 'Failed to delete personnel record.';
+  } else if (deleteType === 'location') {
+    url = 'libs/php/deleteLocation.php';
+    successMessage = 'Location deleted successfully.';
+    errorMessage =
+      'This location cannot be deleted because it has dependent departments.';
+  } else if (deleteType === 'department') {
+    url = 'libs/php/deleteDepartment.php';
+    successMessage = 'Department deleted successfully.';
+    errorMessage =
+      'This department cannot be deleted because it has associated personnel.';
+  }
+
+  // Send the AJAX request
+  $.ajax({
+    url: url,
+    type: 'POST',
+    data: { id: itemToDelete },
+    dataType: 'json',
+    success: function (response) {
+      if (response.status.code === '200') {
+        // Show success modal
+        $('#messageModal .modal-title').text('Success');
+        $('#messageContent').text(successMessage);
+        $('#messageModal').modal('show');
+
+        // Refresh the appropriate table
+        if (deleteType === 'personnel') populatePersonnelTable();
+        if (deleteType === 'location') populateLocationsTable();
+        if (deleteType === 'department') populateDepartmentsTable();
+      } else {
+        // Handle dependency or other errors
+        $('#messageModal .modal-title').text('Error');
+        $('#messageContent').text(response.status.description || errorMessage);
+        $('#messageModal').modal('show');
+      }
+    },
+    error: function () {
+      // Handle AJAX error
+      $('#messageModal .modal-title').text('Error');
+      $('#messageContent').text(
+        'An error occurred while processing your request.'
+      );
+      $('#messageModal').modal('show');
+    },
   });
+}
 
 // -------------------------------------------------------------
 
@@ -2053,6 +1925,3 @@ $(document).on('keydown', function (event) {
 // CHECK ALL PHP SCRIPTS ARE STILL NEEDED
 // DELETE DEP CONFIRMATION MODAL CLOSING TOO EARLY AND CONFIRM DEL BUTTON IS NOT RED
 // Personnel, when not logged in - failed to add personnel please try again - wrong message
-// Edit employee - department menu not populating
-// Edit Departments - Edit menu not working
-// Delete employee - employee cannot be deleted because it has assosiated departments
