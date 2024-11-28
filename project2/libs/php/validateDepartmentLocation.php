@@ -1,8 +1,4 @@
 <?php
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
-
 include("config.php");
 
 header('Content-Type: application/json; charset=UTF-8');
@@ -20,7 +16,6 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Validate inputs
 $departmentID = $_POST['departmentID'] ?? null;
 $locationID = $_POST['locationID'] ?? null;
 
@@ -35,7 +30,6 @@ if (!is_numeric($departmentID) || !is_numeric($locationID)) {
     exit;
 }
 
-// Check if the department and location association is valid
 $query = $conn->prepare('SELECT * FROM department WHERE id = ? AND locationID = ?');
 $query->bind_param('ii', $departmentID, $locationID);
 $query->execute();

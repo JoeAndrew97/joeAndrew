@@ -1,14 +1,9 @@
 <?php
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
 
 include("config.php");
-
 include("init.php");
 
-// Example for a protected script
-requireAuth(); // Ensures user is authenticated
+requireAuth(); 
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -25,7 +20,6 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Validate inputs
 $departmentID = $_POST['departmentID'] ?? null;
 $name = $_POST['name'] ?? null;
 $locationID = $_POST['locationID'] ?? null;
@@ -41,7 +35,6 @@ if (!is_numeric($departmentID) || empty($name) || !is_numeric($locationID)) {
     exit;
 }
 
-// Check if a department with the same name already exists (exclude the current department ID)
 $checkQuery = $conn->prepare('SELECT id, locationID FROM department WHERE name = ? AND id != ?');
 $checkQuery->bind_param('si', $name, $departmentID);
 $checkQuery->execute();
@@ -50,7 +43,6 @@ $result = $checkQuery->get_result();
 if ($result->num_rows > 0) {
     $existingDepartment = $result->fetch_assoc();
 
-    // If a department with the same name exists in a different location, prevent the update
     if ($existingDepartment['locationID'] != $locationID) {
         echo json_encode([
             'status' => [
@@ -67,7 +59,6 @@ if ($result->num_rows > 0) {
 
 $checkQuery->close();
 
-// Proceed to update the department's name and location if no conflict is found
 $updateQuery = $conn->prepare('UPDATE department SET name = ?, locationID = ? WHERE id = ?');
 $updateQuery->bind_param('sii', $name, $locationID, $departmentID);
 

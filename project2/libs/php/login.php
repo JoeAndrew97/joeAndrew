@@ -3,7 +3,7 @@ session_start();
 
 include("config.php");
 
-// Validate inputs
+
 $username = $_POST['username'] ?? null;
 $password = $_POST['password'] ?? null;
 
@@ -20,7 +20,7 @@ if (!$username || !$password) {
 
 // Check credentials
 if ($username === $admin_username && password_verify($password, $hashedPassword)) {
-    $_SESSION['isAuth'] = true; // Set session variable
+    $_SESSION['isAuth'] = true; 
     echo json_encode([
         'status' => [
             'code' => 200,

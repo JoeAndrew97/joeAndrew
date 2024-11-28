@@ -1,14 +1,9 @@
 <?php
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
 
 include("config.php");
-
 include("init.php");
 
-// Example for a protected script
-requireAuth(); // Ensures user is authenticated
+requireAuth(); 
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -25,11 +20,11 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Validate inputs
+
 $id = $_POST['id'] ?? null;
 $firstName = $_POST['firstName'] ?? null;
 $lastName = $_POST['lastName'] ?? null;
-$jobTitle = $_POST['jobTitle'] ?? ''; // Optional
+$jobTitle = $_POST['jobTitle'] ?? ''; 
 $email = $_POST['email'] ?? null;
 $departmentID = $_POST['departmentID'] ?? null;
 
@@ -44,7 +39,6 @@ if (!is_numeric($id) || !is_numeric($departmentID) || empty($firstName) || empty
     exit;
 }
 
-// Step 1: Validate the departmentID exists and fetch the locationID associated with it
 $locationQuery = $conn->prepare('SELECT locationID FROM department WHERE id = ?');
 $locationQuery->bind_param('i', $departmentID);
 $locationQuery->execute();
@@ -67,7 +61,6 @@ $locationRow = $locationResult->fetch_assoc();
 $departmentLocationID = $locationRow['locationID'];
 $locationQuery->close();
 
-// Step 2: Update the personnel record (only fields that exist in the personnel table)
 $updateQuery = $conn->prepare('UPDATE personnel SET firstName = ?, lastName = ?, jobTitle = ?, email = ?, departmentID = ? WHERE id = ?');
 
 if (!$updateQuery) {
@@ -92,7 +85,7 @@ if ($updateQuery->execute()) {
             'description' => 'Employee updated successfully.',
         ],
         'data' => [
-            'locationID' => $departmentLocationID, // Send the new locationID in the response
+            'locationID' => $departmentLocationID, 
         ],
     ]);
 } else {

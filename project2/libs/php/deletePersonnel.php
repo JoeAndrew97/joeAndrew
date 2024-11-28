@@ -1,19 +1,9 @@
 <?php
 
-// FOR PROTECTED ACTIONS:
-
 include("init.php");
-
-// Example for a protected script
-requireAuth(); // Ensures user is authenticated
-
-
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
+requireAuth(); 
 
 include("config.php");
-
 header('Content-Type: application/json; charset=UTF-8');
 
 $conn = new mysqli($cd_host, $cd_user, $cd_password, $cd_dbname, $cd_port, $cd_socket);

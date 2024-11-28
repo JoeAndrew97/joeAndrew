@@ -1,8 +1,4 @@
 <?php
-// For adding new departments, checks against name rather than ID to prevent duplicates
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
 
 include("config.php");
 
@@ -21,7 +17,6 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Validate inputs
 $name = $_POST['name'] ?? null;
 $locationID = $_POST['locationID'] ?? null;
 
@@ -36,7 +31,6 @@ if (empty($name) || !is_numeric($locationID)) {
     exit;
 }
 
-// Check if a department with the same name already exists in the database
 $query = $conn->prepare('SELECT locationID FROM department WHERE name = ?');
 $query->bind_param('s', $name);
 $query->execute();
@@ -45,7 +39,6 @@ $result = $query->get_result();
 if ($result->num_rows > 0) {
     $existingDepartment = $result->fetch_assoc();
 
-    // If the department exists but in a different location, prevent the addition
     if ($existingDepartment['locationID'] != $locationID) {
         echo json_encode([
             'status' => [
@@ -60,7 +53,6 @@ if ($result->num_rows > 0) {
     }
 }
 
-// If no conflict is found, return success
 echo json_encode([
     'status' => [
         'code' => '200',

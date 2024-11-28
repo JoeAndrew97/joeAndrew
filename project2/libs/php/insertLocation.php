@@ -1,15 +1,9 @@
 <?php
 
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
-
 include("config.php");
-
 include("init.php");
 
-// Example for a protected script
-requireAuth(); // Ensures user is authenticated
+requireAuth(); 
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -26,7 +20,7 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Validate the location name
+
 $name = $_POST['name'];
 
 if (empty($name)) {
@@ -40,10 +34,10 @@ if (empty($name)) {
     exit;
 }
 
-// Capitalize the first letter of each word in the name
+
 $formattedName = ucwords(strtolower($name));
 
-// Check if the location already exists (case-insensitive)
+
 $query = $conn->prepare('SELECT COUNT(*) AS count FROM location WHERE LOWER(name) = LOWER(?)');
 $query->bind_param('s', $formattedName);
 $query->execute();
@@ -61,7 +55,7 @@ if ($row['count'] > 0) {
     exit;
 }
 
-// Insert the new location
+
 $query = $conn->prepare('INSERT INTO location (name) VALUES(?)');
 $query->bind_param('s', $formattedName);
 $query->execute();

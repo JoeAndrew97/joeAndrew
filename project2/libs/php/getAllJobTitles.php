@@ -1,8 +1,5 @@
 <?php
 
-// currently not used 
-
-
 include("config.php");
 
 header('Content-Type: application/json; charset=UTF-8');

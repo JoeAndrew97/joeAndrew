@@ -1,8 +1,4 @@
 <?php
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
-
 include("config.php");
 
 header('Content-Type: application/json; charset=UTF-8');
@@ -20,7 +16,6 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Validate input
 $locationID = $_GET['id'] ?? null;
 
 if (!is_numeric($locationID)) {
@@ -34,7 +29,6 @@ if (!is_numeric($locationID)) {
     exit;
 }
 
-// Fetch location details
 $query = $conn->prepare('SELECT id, name FROM location WHERE id = ?');
 $query->bind_param('i', $locationID);
 $query->execute();

@@ -1,9 +1,5 @@
 <?php
 
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
-
 $executionStartTime = microtime(true);
 
 include("config.php");
@@ -27,7 +23,6 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// SQL query with optional filter for location
 $query = 'SELECT `d`.`id` AS `departmentID`, `d`.`name` AS `departmentName`, 
                  `l`.`id` AS `locationID`, `l`.`name` AS `locationName` 
           FROM `department` `d`
@@ -37,20 +32,16 @@ $query = 'SELECT `d`.`id` AS `departmentID`, `d`.`name` AS `departmentName`,
 $params = [];
 $types = '';
 
-// Add filter dynamically if location is provided
-if (isset($_REQUEST['locationID']) && !empty($_REQUEST['locationID'])) {
+if (isset($_GET['locationID']) && !empty($_GET['locationID'])) { // Changed $_REQUEST to $_GET
     $query .= ' AND `l`.`id` = ?';
-    $params[] = $_REQUEST['locationID'];
-    $types .= 'i'; // Integer type
+    $params[] = $_GET['locationID']; // Changed $_REQUEST to $_GET
+    $types .= 'i'; 
 }
-
 
 $query .= ' ORDER BY `d`.`name`, `l`.`name`';
 
-// Prepare the SQL statement
 $stmt = $conn->prepare($query);
 
-// Bind parameters if any filters were added
 if (!empty($params)) {
     $stmt->bind_param($types, ...$params);
 }
@@ -89,4 +80,3 @@ mysqli_close($conn);
 echo json_encode($output);
 
 ?>
-

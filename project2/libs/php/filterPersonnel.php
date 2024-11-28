@@ -1,9 +1,4 @@
 <?php
-
-    // Enable error reporting for development (remove in production)
-    ini_set('display_errors', 'On');
-    error_reporting(E_ALL);
-
     $executionStartTime = microtime(true);
 
     include("config.php");
@@ -27,7 +22,6 @@
         exit;
     }	
 
-    // SQL query with optional filters for department and location
     $query = 'SELECT `p`.`id`, `p`.`firstName`, `p`.`lastName`, `p`.`email`, `p`.`jobTitle`, 
                      `d`.`id` as `departmentID`, `d`.`name` AS `departmentName`, 
                      `l`.`id` as `locationID`, `l`.`name` AS `locationName` 
@@ -39,32 +33,28 @@
     $params = [];
     $types = '';
 
-    // Add filters dynamically
-    if (isset($_REQUEST['departmentID']) && !empty($_REQUEST['departmentID'])) {
-        $query .= ' AND `d`.`id` = ?'; // Use departmentID
-        $params[] = $_REQUEST['departmentID'];
-        $types .= 'i'; // Integer type
+    if (isset($_GET['departmentID']) && !empty($_GET['departmentID'])) { // Changed $_REQUEST to $_GET
+        $query .= ' AND `d`.`id` = ?'; 
+        $params[] = $_GET['departmentID']; // Changed $_REQUEST to $_GET
+        $types .= 'i'; 
     }
 
-    if (isset($_REQUEST['locationID']) && !empty($_REQUEST['locationID'])) {
-        $query .= ' AND `l`.`id` = ?'; // Use locationID
-        $params[] = $_REQUEST['locationID'];
-        $types .= 'i'; // Integer type
+    if (isset($_GET['locationID']) && !empty($_GET['locationID'])) { // Changed $_REQUEST to $_GET
+        $query .= ' AND `l`.`id` = ?'; 
+        $params[] = $_GET['locationID']; // Changed $_REQUEST to $_GET
+        $types .= 'i'; 
     }
 
-    if (isset($_REQUEST['jobTitle']) && $_REQUEST['jobTitle'] !== '') {
-        $query .= ' AND `p`.`jobTitle` = ?'; // Filter by jobTitle
-        $params[] = $_REQUEST['jobTitle'];
-        $types .= 's'; // String type
-}
-
+    if (isset($_GET['jobTitle']) && $_GET['jobTitle'] !== '') { // Changed $_REQUEST to $_GET
+        $query .= ' AND `p`.`jobTitle` = ?'; 
+        $params[] = $_GET['jobTitle']; // Changed $_REQUEST to $_GET
+        $types .= 's'; 
+    }
 
     $query .= ' ORDER BY `p`.`lastName`, `p`.`firstName`, `d`.`name`, `l`.`name`';
 
-    // Prepare the SQL statement
     $stmt = $conn->prepare($query);
 
-    // Bind parameters if any filters were added
     if (!empty($params)) {
         $stmt->bind_param($types, ...$params);
     }
@@ -101,5 +91,4 @@
     mysqli_close($conn);
 
     echo json_encode($output); 
-
 ?>

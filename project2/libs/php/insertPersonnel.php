@@ -1,14 +1,8 @@
 <?php
-    // Enable error reporting for development (remove in production)
-    ini_set('display_errors', 'On');
-    error_reporting(E_ALL);
-
     include("config.php");
-
     include("init.php");
 
-// Example for a protected script
-requireAuth(); // Ensures user is authenticated
+    requireAuth(); 
 
     header('Content-Type: application/json; charset=UTF-8');
 
@@ -25,7 +19,6 @@ requireAuth(); // Ensures user is authenticated
         exit;
     }
 
-    // Validate inputs to prevent SQL injection
     $firstName = $_POST['firstName'];
     $lastName = $_POST['lastName'];
     $jobTitle = $_POST['jobTitle'];
@@ -43,15 +36,13 @@ requireAuth(); // Ensures user is authenticated
         exit;
     }
 
-    // Use prepared statement to insert personnel data
-// Insert data into the personnel table
 $query = $conn->prepare('INSERT INTO personnel (firstName, lastName, jobTitle, email, departmentID) VALUES (?, ?, ?, ?, ?)');
 
 $query->bind_param(
     'ssssi',
     $_POST['firstName'],
     $_POST['lastName'],
-    $_POST['jobTitle'], // Include jobTitle
+    $_POST['jobTitle'], 
     $_POST['email'],
     $_POST['departmentID']
 );

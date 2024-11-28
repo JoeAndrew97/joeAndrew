@@ -1,15 +1,8 @@
 <?php
-// Enable error reporting for development
-// A location cannot be deleted if it has associated departments (department.locationID)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
-
 include("config.php");
-
 include("init.php");
 
-// Example for a protected script
-requireAuth(); // Ensures user is authenticated
+requireAuth(); 
 
 header('Content-Type: application/json; charset=UTF-8');
 

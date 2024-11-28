@@ -1,14 +1,9 @@
 <?php
-// Enable error reporting for development (remove in production)
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
 
 include("config.php");
-
 include("init.php");
 
-// Example for a protected script
-requireAuth(); // Ensures user is authenticated
+requireAuth();
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -25,7 +20,6 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Validate inputs
 $locationID = $_POST['id'] ?? null;
 $name = $_POST['name'] ?? null;
 
@@ -40,7 +34,6 @@ if (!is_numeric($locationID) || empty($name)) {
     exit;
 }
 
-// Check if the location name already exists in the database (excluding the current location ID)
 $checkQuery = $conn->prepare('SELECT id FROM location WHERE name = ? AND id != ?');
 $checkQuery->bind_param('si', $name, $locationID);
 $checkQuery->execute();
@@ -59,7 +52,6 @@ if ($checkResult->num_rows > 0) {
     exit;
 }
 
-// Update location
 $updateQuery = $conn->prepare('UPDATE location SET name = ? WHERE id = ?');
 $updateQuery->bind_param('si', $name, $locationID);
 

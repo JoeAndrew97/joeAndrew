@@ -1,8 +1,5 @@
 <?php
-// init.php
 session_start();
-
-// Common configuration
 include("config.php");
 
 // Utility function to check authentication
