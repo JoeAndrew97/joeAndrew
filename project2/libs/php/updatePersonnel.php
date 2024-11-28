@@ -44,7 +44,7 @@ if (!is_numeric($id) || !is_numeric($departmentID) || empty($firstName) || empty
     exit;
 }
 
-// Step 1: Fetch the locationID associated with the departmentID
+// Step 1: Validate the departmentID exists and fetch the locationID associated with it
 $locationQuery = $conn->prepare('SELECT locationID FROM department WHERE id = ?');
 $locationQuery->bind_param('i', $departmentID);
 $locationQuery->execute();
@@ -67,44 +67,7 @@ $locationRow = $locationResult->fetch_assoc();
 $departmentLocationID = $locationRow['locationID'];
 $locationQuery->close();
 
-// Step 2: Validate that the employee is assigned a valid department for their location
-// Fetch the employee's current locationID based on departmentID
-$employeeLocationQuery = $conn->prepare('SELECT d.locationID FROM personnel p JOIN department d ON p.departmentID = d.id WHERE p.id = ?');
-$employeeLocationQuery->bind_param('i', $id);
-$employeeLocationQuery->execute();
-$employeeLocationResult = $employeeLocationQuery->get_result();
-
-if ($employeeLocationResult->num_rows === 0) {
-    echo json_encode([
-        'status' => [
-            'code' => '400',
-            'name' => 'error',
-            'description' => 'Invalid employee ID or department association.',
-        ],
-    ]);
-    $employeeLocationQuery->close();
-    $conn->close();
-    exit;
-}
-
-$employeeLocationRow = $employeeLocationResult->fetch_assoc();
-$employeeLocationID = $employeeLocationRow['locationID'];
-$employeeLocationQuery->close();
-
-// Check if the department's location matches the employee's location
-if ($departmentLocationID !== $employeeLocationID) {
-    echo json_encode([
-        'status' => [
-            'code' => '400',
-            'name' => 'error',
-            'description' => 'The selected department does not belong to the employee\'s location.',
-        ],
-    ]);
-    $conn->close();
-    exit;
-}
-
-// Step 3: Update the personnel record
+// Step 2: Update the personnel record (only fields that exist in the personnel table)
 $updateQuery = $conn->prepare('UPDATE personnel SET firstName = ?, lastName = ?, jobTitle = ?, email = ?, departmentID = ? WHERE id = ?');
 
 if (!$updateQuery) {
@@ -128,6 +91,9 @@ if ($updateQuery->execute()) {
             'name' => 'success',
             'description' => 'Employee updated successfully.',
         ],
+        'data' => [
+            'locationID' => $departmentLocationID, // Send the new locationID in the response
+        ],
     ]);
 } else {
     echo json_encode([
@@ -142,4 +108,5 @@ if ($updateQuery->execute()) {
 $updateQuery->close();
 $conn->close();
 ?>
+
 
