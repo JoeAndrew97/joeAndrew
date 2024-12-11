@@ -1,8 +1,5 @@
 <?php
 
-// include("init.php");
-// requireAuth(); 
-
 include("config.php");
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -19,7 +16,6 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Validate inputs
 $personnelID = $_POST['id'] ?? null;
 
 if (!is_numeric($personnelID)) {
@@ -33,7 +29,6 @@ if (!is_numeric($personnelID)) {
     exit;
 }
 
-// Proceed with deletion
 $query = $conn->prepare('DELETE FROM personnel WHERE id = ?');
 $query->bind_param('i', $personnelID);
 

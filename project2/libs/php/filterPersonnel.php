@@ -16,7 +16,6 @@ if (mysqli_connect_errno()) {
     exit;
 }
 
-// Base query
 $query = 'SELECT p.id, p.firstName, p.lastName, p.email, p.jobTitle, 
                  d.name AS departmentName, l.name AS locationName
           FROM personnel p

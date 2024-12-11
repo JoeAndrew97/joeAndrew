@@ -32,9 +32,9 @@ $query = 'SELECT `d`.`id` AS `departmentID`, `d`.`name` AS `departmentName`,
 $params = [];
 $types = '';
 
-if (isset($_GET['locationID']) && !empty($_GET['locationID'])) { // Changed $_REQUEST to $_GET
+if (isset($_GET['locationID']) && !empty($_GET['locationID'])) { 
     $query .= ' AND `l`.`id` = ?';
-    $params[] = $_GET['locationID']; // Changed $_REQUEST to $_GET
+    $params[] = $_GET['locationID']; 
     $types .= 'i'; 
 }
 
