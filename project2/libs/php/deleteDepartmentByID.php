@@ -2,9 +2,6 @@
 	$executionStartTime = microtime(true);
 
 	include("config.php");
-	// include("init.php");
-
-	// requireAuth(); 
 
 	header('Content-Type: application/json; charset=UTF-8');
 
@@ -28,7 +25,7 @@
 
 	$query = $conn->prepare('DELETE FROM department WHERE id = ?');
 	
-	$query->bind_param("i", $_POST['id']); // Changed $_REQUEST to $_POST
+	$query->bind_param("i", $_POST['id']);
 
 	$query->execute();
 	

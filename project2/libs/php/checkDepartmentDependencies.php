@@ -17,7 +17,7 @@ if (!is_numeric($departmentID)) {
     exit;
 }
 
-$query = $conn->prepare("SELECT COUNT(*) AS count FROM personnel WHERE departmentID = ?");
+$query = $conn->prepare("SELECT COUNT(id) AS count FROM personnel WHERE departmentID = ?");
 $query->bind_param("i", $departmentID);
 $query->execute();
 

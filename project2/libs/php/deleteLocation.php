@@ -1,8 +1,5 @@
 <?php
 include("config.php");
-// include("init.php");
-
-// requireAuth(); 
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -32,7 +29,6 @@ if (!is_numeric($locationID)) {
     exit;
 }
 
-// Check for dependent departments
 $checkQuery = $conn->prepare('SELECT id FROM department WHERE locationID = ?');
 $checkQuery->bind_param('i', $locationID);
 $checkQuery->execute();
@@ -51,7 +47,6 @@ if ($checkResult->num_rows > 0) {
     exit;
 }
 
-// Proceed with deletion
 $deleteQuery = $conn->prepare('DELETE FROM location WHERE id = ?');
 $deleteQuery->bind_param('i', $locationID);
 

@@ -1,8 +1,5 @@
 <?php
     include("config.php");
-    // include("init.php");
-
-    // requireAuth(); 
 
     header('Content-Type: application/json; charset=UTF-8');
 

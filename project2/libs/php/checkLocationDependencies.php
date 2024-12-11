@@ -17,7 +17,7 @@ if (!is_numeric($locationID)) {
     exit;
 }
 
-$query = $conn->prepare("SELECT COUNT(*) AS count FROM department WHERE locationID = ?");
+$query = $conn->prepare("SELECT COUNT(locationID) AS count FROM department WHERE locationID = ?");
 $query->bind_param("i", $locationID);
 $query->execute();
 

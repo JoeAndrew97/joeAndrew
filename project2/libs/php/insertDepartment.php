@@ -3,9 +3,7 @@
 	$executionStartTime = microtime(true);
 
 	include("config.php");
-	// include("init.php");
 
-	// requireAuth(); 
 
 	header('Content-Type: application/json; charset=UTF-8');
 
@@ -27,11 +25,9 @@
 
 	}	
 
-	// Changed $_REQUEST to $_POST for production
-
 	$query = $conn->prepare('INSERT INTO department (name, locationID) VALUES(?, ?)');
 
-	$query->bind_param("si", $_POST['name'], $_POST['locationID']); // Changed $_REQUEST to $_POST
+	$query->bind_param("si", $_POST['name'], $_POST['locationID']);
 
 	$query->execute();
 	
