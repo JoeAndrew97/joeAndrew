@@ -1,42 +1,42 @@
 <?php
-session_start();
+// session_start();
 
-include("config.php");
+// include("config.php");
 
 
-$username = $_POST['username'] ?? null;
-$password = $_POST['password'] ?? null;
+// $username = $_POST['username'] ?? null;
+// $password = $_POST['password'] ?? null;
 
-if (!$username || !$password) {
-    echo json_encode([
-        'status' => [
-            'code' => 400,
-            'name' => 'error',
-            'description' => 'Missing username or password.',
-        ],
-    ]);
-    exit;
-}
+// if (!$username || !$password) {
+//     echo json_encode([
+//         'status' => [
+//             'code' => 400,
+//             'name' => 'error',
+//             'description' => 'Missing username or password.',
+//         ],
+//     ]);
+//     exit;
+// }
 
-// Check credentials
-if ($username === $admin_username && password_verify($password, $hashedPassword)) {
-    $_SESSION['isAuth'] = true; 
-    echo json_encode([
-        'status' => [
-            'code' => 200,
-            'name' => 'success',
-            'description' => 'Login successful.',
-        ],
-    ]);
-} else {
-    echo json_encode([
-        'status' => [
-            'code' => 401,
-            'name' => 'error',
-            'description' => 'Invalid username or password.',
-        ],
-    ]);
-}
+// // Check credentials
+// if ($username === $admin_username && password_verify($password, $hashedPassword)) {
+//     $_SESSION['isAuth'] = true; 
+//     echo json_encode([
+//         'status' => [
+//             'code' => 200,
+//             'name' => 'success',
+//             'description' => 'Login successful.',
+//         ],
+//     ]);
+// } else {
+//     echo json_encode([
+//         'status' => [
+//             'code' => 401,
+//             'name' => 'error',
+//             'description' => 'Invalid username or password.',
+//         ],
+//     ]);
+// }
 ?>
 
 

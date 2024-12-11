@@ -1,6 +1,6 @@
 <?php
-include("init.php");
-requireAuth(); 
+// include("init.php");
+// requireAuth(); 
 
 include("config.php");
 
