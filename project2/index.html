@@ -166,7 +166,13 @@
     <!----------     Modals      ---------->
 
     <!--- Message Modal -->
-    <div id="messageModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div
+      id="messageModal"
+      class="modal fade"
+      tabindex="-1"
+      aria-hidden="true"
+      data-bs-backdrop="false"
+    >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-primary bg-gradient text-white">
@@ -344,14 +350,14 @@
               form="addPersonnelForm"
               class="btn btn-outline-primary btn-sm myBtn"
             >
-              SAVE
+              YES
             </button>
             <button
               type="button"
               class="btn btn-outline-primary btn-sm myBtn"
               data-bs-dismiss="modal"
             >
-              CANCEL
+              NO
             </button>
           </div>
         </div>
@@ -549,6 +555,15 @@
               </div>
 
               <div class="form-floating mb-3">
+                <select
+                  class="form-select"
+                  id="editPersonnelDepartment"
+                  placeholder="Department"
+                ></select>
+                <label for="editPersonnelDepartment">Department</label>
+              </div>
+
+              <div class="form-floating">
                 <input
                   type="email"
                   class="form-control"
@@ -557,15 +572,6 @@
                   required
                 />
                 <label for="editPersonnelEmailAddress">Email Address</label>
-              </div>
-
-              <div class="form-floating">
-                <select
-                  class="form-select"
-                  id="editPersonnelDepartment"
-                  placeholder="Department"
-                ></select>
-                <label for="editPersonnelDepartment">Department</label>
               </div>
             </form>
           </div>
@@ -721,6 +727,7 @@
 
     <div
       id="confirmDeleteModal"
+      data-bs-backdrop="false"
       class="modal fade"
       tabindex="-1"
       aria-hidden="true"
@@ -755,7 +762,7 @@
               class="btn btn-outline-primary btn-sm"
               data-bs-dismiss="modal"
             >
-              CANCEL
+              NO
             </button>
           </div>
         </div>
