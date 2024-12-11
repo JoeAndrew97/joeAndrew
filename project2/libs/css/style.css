@@ -25,6 +25,12 @@ tr {
   width: 70px;
 }
 
+.edit-btn,
+.editDepartmentBtn,
+.editLocationBtn {
+  margin-right: 0.5rem;
+}
+
 .spinner-overlay {
   position: fixed;
   top: 0;
