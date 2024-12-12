@@ -6,6 +6,8 @@ let selectedLocationID = '0'; // Default to "All"
 
 // AJAX request to getAll.php
 function populatePersonnelTable() {
+  selectedDepartmentID = '0';
+  selectedLocationID = '0';
   $('#searchInp').val('');
   $('#clearSearch').hide();
   const $personnelTableBody = $('#personnelTableBody');
