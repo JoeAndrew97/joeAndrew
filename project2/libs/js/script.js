@@ -1314,13 +1314,13 @@ $('body').on(
       deleteType = 'location';
       checkDependencies(
         'libs/php/checkLocationDependencies.php',
-        'This location cannot be deleted because it has associated departments.'
+        'it has associated departments.'
       );
     } else if ($(this).hasClass('deleteDepartmentBtn')) {
       deleteType = 'department';
       checkDependencies(
         'libs/php/checkDepartmentDependencies.php',
-        'This department cannot be deleted because it has associated personnel.'
+        'it has associated personnel.'
       );
     }
   }
@@ -1366,12 +1366,14 @@ function checkDependencies(url, dependencyMessage) {
                 $('#confirmDeleteModal').modal('show');
               }
             } else {
+              $('#confirmDeleteModal').modal('hide');
               $('#messageModal .modal-title').text('Error');
               $('#messageContent').text('Failed to check dependencies.');
               $('#messageModal').modal('show');
             }
           },
           error: function () {
+            $('#confirmDeleteModal').modal('hide');
             $('#messageModal .modal-title').text('Error');
             $('#messageContent').text(
               'An error occurred while checking dependencies.'
@@ -1380,12 +1382,14 @@ function checkDependencies(url, dependencyMessage) {
           },
         });
       } else {
+        $('#confirmDeleteModal').modal('hide');
         $('#messageModal .modal-title').text('Error');
         $('#messageContent').text('Failed to retrieve item details.');
         $('#messageModal').modal('show');
       }
     },
     error: function () {
+      $('#confirmDeleteModal').modal('hide');
       $('#messageModal .modal-title').text('Error');
       $('#messageContent').text(
         'An error occurred while retrieving the item details.'
@@ -1451,7 +1455,7 @@ $('#confirmDeleteModal').on('show.bs.modal', function () {
 // Form submission handler for deletion
 $('#confirmDeleteForm').on('submit', function (e) {
   e.preventDefault(); // Prevent the form's default behavior (navigating to action)
-
+  $('#confirmDeleteModal').modal('hide');
   let url = '';
   let successMessage = '';
   let errorMessage = '';
@@ -1489,12 +1493,14 @@ $('#confirmDeleteForm').on('submit', function (e) {
         if (deleteType === 'department') populateDepartmentsTable();
       } else {
         // Show error modal
+        $('#confirmDeleteModal').modal('hide');
         $('#messageModal .modal-title').text('Error');
         $('#messageContent').text(response.status.description || errorMessage);
         $('#messageModal').modal('show');
       }
     },
     error: function () {
+      $('#confirmDeleteModal').modal('hide');
       $('#messageModal .modal-title').text('Error');
       $('#messageContent').text(
         'An error occurred while processing your request.'

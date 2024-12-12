@@ -216,7 +216,7 @@
       >
         <div class="modal-content modal-sm shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title">Filter employees</h5>
+            <h5 class="modal-title">Filter personnel</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -276,7 +276,7 @@
       >
         <div class="modal-content shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title">Add New Personnel</h5>
+            <h5 class="modal-title">Add new personnel</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -295,7 +295,7 @@
                   placeholder="First Name"
                   required
                 />
-                <label for="addFirstName">First Name</label>
+                <label for="addFirstName">First name</label>
               </div>
 
               <div class="form-floating mb-3">
@@ -306,7 +306,7 @@
                   placeholder="Last Name"
                   required
                 />
-                <label for="addLastName">Last Name</label>
+                <label for="addLastName">Last name</label>
               </div>
 
               <div class="form-floating mb-3">
@@ -316,19 +316,7 @@
                   id="addJobTitle"
                   placeholder="Job Title"
                 />
-                <label for="addJobTitle">Job Title</label>
-              </div>
-
-              <div class="form-floating mb-3">
-                <select
-                  class="form-select"
-                  id="addDepartment"
-                  placeholder="Department"
-                  required
-                >
-                  <option value="">Select a department</option>
-                </select>
-                <label for="addDepartment">Department</label>
+                <label for="addJobTitle">Job title</label>
               </div>
 
               <div class="form-floating mb-3">
@@ -339,7 +327,19 @@
                   placeholder="Email Address"
                   required
                 />
-                <label for="addEmail">Email</label>
+                <label for="addEmail">Email address</label>
+              </div>
+
+              <div class="form-floating mb">
+                <select
+                  class="form-select"
+                  id="addDepartment"
+                  placeholder="Department"
+                  required
+                >
+                  <option value="">Select a department</option>
+                </select>
+                <label for="addDepartment">Department</label>
               </div>
             </form>
           </div>
@@ -379,7 +379,7 @@
       >
         <div class="modal-content shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title">Add New Department</h5>
+            <h5 class="modal-title">Add new department</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -398,7 +398,7 @@
                   placeholder="Department Name"
                   required
                 />
-                <label for="addDepartmentName">Department Name</label>
+                <label for="addDepartmentName">Department name</label>
               </div>
 
               <div class="form-floating">
@@ -450,7 +450,7 @@
       >
         <div class="modal-content shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title">Add New Location</h5>
+            <h5 class="modal-title">Add new location</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -469,7 +469,7 @@
                   placeholder="Location Name"
                   required
                 />
-                <label for="addLocationName">Location Name</label>
+                <label for="addLocationName">Location name</label>
               </div>
             </form>
           </div>
@@ -495,6 +495,7 @@
     </div>
 
     <!-- Edit Personnel Modal -->
+
     <div
       id="editPersonnelModal"
       class="modal fade"
@@ -509,7 +510,7 @@
       >
         <div class="modal-content shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title">Edit Employee</h5>
+            <h5 class="modal-title">Edit employee</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -551,19 +552,10 @@
                   id="editPersonnelJobTitle"
                   placeholder="Job title"
                 />
-                <label for="editPersonnelJobTitle">Job Title</label>
+                <label for="editPersonnelJobTitle">Job title</label>
               </div>
 
               <div class="form-floating mb-3">
-                <select
-                  class="form-select"
-                  id="editPersonnelDepartment"
-                  placeholder="Department"
-                ></select>
-                <label for="editPersonnelDepartment">Department</label>
-              </div>
-
-              <div class="form-floating">
                 <input
                   type="email"
                   class="form-control"
@@ -571,7 +563,15 @@
                   placeholder="Email address"
                   required
                 />
-                <label for="editPersonnelEmailAddress">Email Address</label>
+                <label for="editPersonnelEmailAddress">Email address</label>
+              </div>
+              <div class="form-floating mb">
+                <select
+                  class="form-select"
+                  id="editPersonnelDepartment"
+                  placeholder="Department"
+                ></select>
+                <label for="editPersonnelDepartment">Department</label>
               </div>
             </form>
           </div>
@@ -610,7 +610,7 @@
       >
         <div class="modal-content shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title">Edit Department</h5>
+            <h5 class="modal-title">Edit department</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -631,7 +631,7 @@
                   placeholder="Department Name"
                   required
                 />
-                <label for="editDepartmentName">Department Name</label>
+                <label for="editDepartmentName">Name</label>
               </div>
 
               <div class="form-floating">
@@ -679,7 +679,7 @@
       <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title">Edit Location</h5>
+            <h5 class="modal-title">Edit location</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -699,7 +699,7 @@
                   placeholder="Location Name"
                   required
                 />
-                <label for="editLocationName">Location Name</label>
+                <label for="editLocationName">Name</label>
               </div>
             </form>
           </div>
@@ -707,7 +707,7 @@
             <button
               type="submit"
               form="editLocationForm"
-              class="btn btn-outline-primary btn-sm"
+              class="btn btn-outline-primary btn-sm myBtn"
             >
               SAVE
             </button>
@@ -735,7 +735,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow">
           <div class="modal-header bg-primary bg-gradient text-white">
-            <h5 class="modal-title">Confirm Deletion</h5>
+            <h5 class="modal-title">Confirm deletion</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
